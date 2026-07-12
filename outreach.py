@@ -26,64 +26,62 @@ def _personalization_line(lead: dict) -> str:
     """
     Generate the 20% personalisation hook.
     Uses whatever data we have — area, rating, category nuance.
-    Keeps it one short sentence, observation not flattery.
+    Returns a complete sentence starting with "Came across [business]..."
     """
     name     = lead.get("name", "")
     area     = _extract_area(lead)
     category = (lead.get("category") or "").lower()
     rating   = lead.get("rating")
-    website  = lead.get("website", "")
 
-    # Priority: rating > area-specific > category-specific > generic
-    if rating and float(rating) >= 4.5:
-        return f"Came across {name} while looking at top-rated {category}s in {area} — clearly doing solid work."
-    elif area and area.lower() not in ("bangalore", "bengaluru", ""):
-        return f"Noticed {name} while looking at {category}s in {area}."
-    elif "real estate" in category:
-        return f"Saw {name} while researching agencies helping clients visualise properties before buying."
-    elif "architect" in category:
-        return f"Came across {name} while looking at architecture firms in Bangalore."
-    elif "interior" in category:
-        return f"Came across {name} while looking at interior studios in {area}."
-    elif "builder" in category or "contractor" in category:
-        return f"Saw {name} while researching builders working on residential projects in {area}."
+    # Build the base: "Came across {name} while looking at {category}s in {area}."
+    if category:
+        cat_plural = category + "s"  # quick and dirty plural
+        base = f"Came across {name} while looking at {cat_plural} in {area}"
     else:
-        return f"Came across {name} while looking at design businesses in {area}."
+        base = f"Came across {name} while looking at design businesses in {area}"
+
+    # Add rating-based hook
+    if rating and float(rating) >= 4.5:
+        return base + f", you are clearly doing solid work."
+    elif rating and float(rating) >= 4.0:
+        return base + f", well rated in the area."
+    else:
+        return base + "."
 
 # ── Templates ─────────────────────────────────────────────────────────────────
-# Structure: [personalisation line] + [what we do] + [one value prop] + [soft CTA]
-# Keep each under 100 words. No buzzwords. No "I hope this finds you well."
+# Each template follows: [personalisation line] + [what we do] + [value prop] + [CTA]
+# No buzzwords, no flattery.
 
 def _build_instagram(lead: dict) -> str:
     hook = _personalization_line(lead)
+    cat  = (lead.get("category") or "design business").lower()
     return (
         f"{hook}\n\n"
-        f"I run RAST Studios — we make 3D renders and walkthroughs for {(lead.get('category') or 'design').lower()}s in Bangalore. "
+        f"We run RAST Studios — we make 3D renders and walkthroughs for {cat}s in Bangalore. "
         f"Helps clients visualise the space before anything is built, which makes approvals a lot smoother.\n\n"
         f"Happy to share a couple of samples if it's relevant to what you're working on?"
     )
 
 def _build_whatsapp(lead: dict) -> str:
     hook = _personalization_line(lead)
-    name = lead.get("name", "")
+    cat  = (lead.get("category") or "design business").lower()
     return (
         f"Hi, {hook}\n\n"
-        f"I'm Tejas from RAST Studios, a 3D visualisation studio in Bangalore. "
-        f"We work with {(lead.get('category') or 'design').lower()}s to create renders and walkthroughs "
-        f"that help clients say yes faster.\n\n"
-        f"Would it be ok if I sent over a few samples relevant to {name}'s work?"
+        f"We run RAST Studios — we make 3D renders and walkthroughs for {cat}s in Bangalore. "
+        f"Helps clients visualise the space before anything is built, which makes approvals a lot smoother.\n\n"
+        f"Happy to share a couple of samples if it's relevant to what you're working on?"
     )
 
 def _build_email(lead: dict) -> str:
-    hook     = _personalization_line(lead)
-    name     = lead.get("name", "")
-    category = (lead.get("category") or "design business").lower()
+    hook = _personalization_line(lead)
+    name = lead.get("name", "")
+    cat  = (lead.get("category") or "design business").lower()
     return (
         f"Subject: Quick question — 3D renders for {name}\n\n"
         f"Hi,\n\n"
         f"{hook}\n\n"
-        f"I run RAST Studios, a Bangalore-based 3D visualisation studio. "
-        f"We help {category}s present projects to clients with photorealistic renders and walkthroughs "
+        f"We run RAST Studios, a Bangalore-based 3D visualisation studio. "
+        f"We help {cat}s present projects to clients with photorealistic renders and walkthroughs "
         f"before construction starts — the kind of visuals that make it easier for clients to commit.\n\n"
         f"I have a couple of samples that might be relevant to the type of projects {name} works on. "
         f"Worth a quick look?\n\n"
@@ -93,14 +91,32 @@ def _build_email(lead: dict) -> str:
     )
 
 def _build_linkedin(lead: dict) -> str:
-    hook     = _personalization_line(lead)
-    category = (lead.get("category") or "design").lower()
+    hook = _personalization_line(lead)
+    cat  = (lead.get("category") or "design").lower()
     return (
         f"{hook}\n\n"
-        f"I run RAST Studios, a 3D architectural visualisation studio in Bangalore. "
-        f"We create renders and walkthroughs that help {category}s present projects more clearly to clients — "
+        f"We run RAST Studios, a 3D architectural visualisation studio in Bangalore. "
+        f"We create renders and walkthroughs that help {cat}s present projects more clearly to clients — "
         f"particularly useful at the proposal and approval stage.\n\n"
         f"Happy to share some samples if useful."
+    )
+
+def _build_overflow(lead: dict) -> str:
+    """
+    Premium template for high‑end leads – pitches Unreal Engine, VR walkthroughs,
+    and overflow capacity for busy studios.
+    """
+    hook = _personalization_line(lead)
+    name = lead.get("name", "")
+    cat  = (lead.get("category") or "design business").lower()
+    return (
+        f"{hook}\n\n"
+        f"We run RAST Studios — we specialise in high‑end 3D visualisation using Unreal Engine "
+        f"for real‑time renders, VR walkthroughs, and cinematics. We also take on overflow work "
+        f"when your team is at capacity.\n\n"
+        f"If you ever need extra render support or want to explore VR presentations for your clients, "
+        f"I'd love to show you what we can do.\n\n"
+        f"Let me know if a quick call makes sense?"
     )
 
 # ── Public interface ──────────────────────────────────────────────────────────
@@ -110,6 +126,7 @@ TEMPLATE_BUILDERS = {
     "WhatsApp":     _build_whatsapp,
     "Email":        _build_email,
     "LinkedIn":     _build_linkedin,
+    "Overflow / VR": _build_overflow,
 }
 
 def fill_template(template_name: str, lead: dict) -> str:
@@ -152,17 +169,16 @@ Lead details:
 
 STRICT RULES — follow all of them:
 1. Structure: one personalisation line (20%) + generic core (80%)
-2. Personalisation line: one specific observation about this business.
-   Use area, category, or rating. Do NOT say "love your work" or "impressive portfolio".
-   Say something factual: "Noticed [name] while looking at [category]s in [area]."
-3. Generic core: who RAST Studios is, what we do (3D renders + walkthroughs),
-   one value prop (helps clients visualise before construction, smoother approvals),
-   soft CTA (share samples, no pressure).
-4. Under 90 words total.
-5. No em-dashes. No buzzwords. No "hope this finds you well".
-6. Sound like a real person, not a sales email.
-7. Do not use the word "stunning", "amazing", "incredible", "excited", "passionate".
-8. End with a question, not a statement.
+2. Personalisation line: start with "Came across [business] while looking at [category]s in [area]" 
+   and optionally add ", you are clearly doing solid work" if rating >= 4.5.
+3. Generic core: "We run RAST Studios — we make 3D renders and walkthroughs for [category]s in Bangalore. 
+   Helps clients visualise the space before anything is built, which makes approvals a lot smoother."
+4. CTA: "Happy to share a couple of samples if it's relevant to what you're working on?"
+5. Under 90 words total.
+6. No em-dashes. No buzzwords. No "hope this finds you well".
+7. Sound like a real person, not a sales email.
+8. Do not use the word "stunning", "amazing", "incredible", "excited", "passionate".
+9. End with a question.
 
 Write only the message. No subject line unless it is an email format.
 """
@@ -181,13 +197,13 @@ Write only the message. No subject line unless it is an email format.
 
 if __name__ == "__main__":
     sample = {
-        "name":     "Studio 7 Interiors",
-        "category": "Interior Designer",
+        "name":     "New Door Venture",
+        "category": "Real Estate Agent",
         "address":  "Indiranagar, Bangalore",
-        "website":  "https://studio7.in",
+        "website":  "https://newdoor.in",
         "rating":   4.7,
     }
-    print("=== Instagram ===")
+    print("=== Instagram DM ===")
     print(fill_template("Instagram DM", sample))
     print("\n=== WhatsApp ===")
     print(fill_template("WhatsApp", sample))
@@ -195,3 +211,5 @@ if __name__ == "__main__":
     print(fill_template("Email", sample))
     print("\n=== LinkedIn ===")
     print(fill_template("LinkedIn", sample))
+    print("\n=== Overflow / VR ===")
+    print(fill_template("Overflow / VR", sample))
