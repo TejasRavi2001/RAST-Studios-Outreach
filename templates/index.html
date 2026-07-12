@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>RAST Studios — Lead Dashboard</title>
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 <style>
@@ -35,6 +35,7 @@ body {
   color: #d8e1e6;
   min-height: 100vh;
   font-size: 14px;
+  overflow-x: hidden;
 }
 
 /* ── Header ── */
@@ -533,9 +534,16 @@ a { color: inherit; }
   box-shadow: var(--shadow);
   border-left: 4px solid var(--gold);
   position: relative;
-  touch-action: pan-y;
+  touch-action: none;   /* prevent page scroll while swiping */
   user-select: none;
-  transition: transform 0.2s;
+  transition: transform 0.15s ease, background 0.15s ease, opacity 0.3s ease;
+  will-change: transform;
+  overflow: hidden;
+  cursor: grab;
+}
+.lead-card.swiping {
+  cursor: grabbing;
+  transition: none;
 }
 .lead-card .card-row {
   display: flex;
@@ -553,18 +561,30 @@ a { color: inherit; }
   margin-top: 10px;
   flex-wrap: wrap;
 }
+/* Swipe hint labels (overlay) */
 .lead-card .swipe-hint {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.7rem;
-  color: var(--muted);
-  opacity: 0.5;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
   pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
-.lead-card .swipe-left { right: 8px; }
-.lead-card .swipe-right { left: 8px; }
-
+.lead-card .swipe-hint.right {
+  right: 20px;
+  color: #4caf72;
+}
+.lead-card .swipe-hint.left {
+  left: 20px;
+  color: #f87171;
+}
+.lead-card .swipe-hint.show {
+  opacity: 0.9;
+}
 /* Hide table on mobile, show cards */
 @media screen and (max-width: 768px) {
   .table-wrap { display: none; }
@@ -882,6 +902,10 @@ a { color: inherit; }
   <div class="leads-cards" id="leads-cards">
     {% for lead in leads %}
     <div class="lead-card" data-id="{{ lead.id }}" data-name="{{ lead.name }}">
+      <!-- Swipe hint overlays -->
+      <div class="swipe-hint right">✅ CONTACT</div>
+      <div class="swipe-hint left">🗑 DELETE</div>
+
       <div class="card-row">
         <span class="label">Business</span>
         <span class="value">
@@ -960,9 +984,6 @@ a { color: inherit; }
         <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ DM</button>
         <button class="btn-del" onclick="deleteLead({{ lead.id }}, this)">🗑</button>
       </div>
-      <!-- Swipe hints (hidden on desktop) -->
-      <span class="swipe-hint swipe-right">👈 Swipe</span>
-      <span class="swipe-hint swipe-left">Swipe 👉</span>
     </div>
     {% endfor %}
   </div>
@@ -1042,6 +1063,8 @@ a { color: inherit; }
   <div class="leads-cards" id="contacted-cards">
     {% for lead in leads %}
     <div class="lead-card" data-id="{{ lead.id }}">
+      <div class="swipe-hint right">✅ CONTACT</div>
+      <div class="swipe-hint left">🗑 DELETE</div>
       <div class="card-row"><span class="label">Business</span><span class="value">{% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}</span></div>
       <div class="card-row"><span class="label">Category</span><span class="value">{{ lead.category }}</span></div>
       <div class="card-row"><span class="label">Area</span><span class="value">{{ (lead.address or '').split(',')[0] }}</span></div>
@@ -1383,41 +1406,212 @@ function deleteLead(leadId, btn) {
     });
 }
 
-// ── Mobile Swipe for cards ──────────────────────────────────────────────
+// ── Tinder‑style Swipe for mobile cards ──────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
   const cards = document.querySelectorAll('.lead-card');
   let startX = 0;
   let currentCard = null;
-  const SWIPE_THRESHOLD = 50;
+  let isSwiping = false;
+  const SWIPE_THRESHOLD = 100;
 
   cards.forEach(card => {
+    // Touch events
     card.addEventListener('touchstart', function(e) {
+      // Ignore if swiping already or if the touch started on a button/input
+      if (isSwiping) return;
+      const target = e.target;
+      if (target.closest('button, a, input, select, textarea, .editable')) return;
       startX = e.touches[0].clientX;
       currentCard = this;
+      isSwiping = true;
+      this.classList.add('swiping');
+      this.style.transition = 'none';
+      // Reset hints
+      this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+    }, { passive: true });
+
+    card.addEventListener('touchmove', function(e) {
+      if (!isSwiping || !currentCard) return;
+      const deltaX = e.touches[0].clientX - startX;
+      // Move the card
+      this.style.transform = `translateX(${deltaX}px)`;
+      // Change background color and show hint
+      const rightHint = this.querySelector('.swipe-hint.right');
+      const leftHint = this.querySelector('.swipe-hint.left');
+      if (deltaX > 20) {
+        this.style.backgroundColor = 'rgba(76,175,114,0.25)';
+        rightHint.classList.add('show');
+        leftHint.classList.remove('show');
+      } else if (deltaX < -20) {
+        this.style.backgroundColor = 'rgba(248,113,113,0.25)';
+        leftHint.classList.add('show');
+        rightHint.classList.remove('show');
+      } else {
+        this.style.backgroundColor = '';
+        rightHint.classList.remove('show');
+        leftHint.classList.remove('show');
+      }
     }, { passive: true });
 
     card.addEventListener('touchend', function(e) {
-      if (!currentCard) return;
-      const endX = e.changedTouches[0].clientX;
-      const delta = startX - endX;
-      if (Math.abs(delta) > SWIPE_THRESHOLD) {
-        if (delta > 0) {
-          const delBtn = currentCard.querySelector('.btn-del');
-          if (delBtn) {
-            delBtn.style.transform = 'scale(1.2)';
-            setTimeout(() => delBtn.style.transform = '', 300);
-          }
-        } else {
-          const waBtn = currentCard.querySelector('.btn-wa');
-          if (waBtn) {
-            waBtn.style.transform = 'scale(1.2)';
-            setTimeout(() => waBtn.style.transform = '', 300);
-          }
-        }
+      if (!isSwiping || !currentCard) return;
+      const deltaX = currentCard._deltaX || 0;
+      const finalDelta = e.changedTouches[0].clientX - startX;
+      
+      // Decide action
+      if (finalDelta > SWIPE_THRESHOLD) {
+        // Right swipe → Mark Contacted
+        const leadId = parseInt(this.dataset.id);
+        markContacted(leadId, this);
+      } else if (finalDelta < -SWIPE_THRESHOLD) {
+        // Left swipe → Delete
+        const leadId = parseInt(this.dataset.id);
+        deleteLeadSwipe(leadId, this);
+      } else {
+        // Snap back
+        this.style.transition = 'transform 0.3s ease, background 0.3s ease';
+        this.style.transform = 'translateX(0)';
+        this.style.backgroundColor = '';
+        this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+        setTimeout(() => {
+          this.style.transition = '';
+          this.classList.remove('swiping');
+        }, 300);
       }
+      isSwiping = false;
       currentCard = null;
     }, { passive: true });
+
+    // Also handle mouse for desktop testing (optional)
+    card.addEventListener('mousedown', function(e) {
+      if (isSwiping) return;
+      const target = e.target;
+      if (target.closest('button, a, input, select, textarea, .editable')) return;
+      startX = e.clientX;
+      currentCard = this;
+      isSwiping = true;
+      this.classList.add('swiping');
+      this.style.transition = 'none';
+      this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+    });
+
+    card.addEventListener('mousemove', function(e) {
+      if (!isSwiping || !currentCard) return;
+      const deltaX = e.clientX - startX;
+      this.style.transform = `translateX(${deltaX}px)`;
+      const rightHint = this.querySelector('.swipe-hint.right');
+      const leftHint = this.querySelector('.swipe-hint.left');
+      if (deltaX > 20) {
+        this.style.backgroundColor = 'rgba(76,175,114,0.25)';
+        rightHint.classList.add('show');
+        leftHint.classList.remove('show');
+      } else if (deltaX < -20) {
+        this.style.backgroundColor = 'rgba(248,113,113,0.25)';
+        leftHint.classList.add('show');
+        rightHint.classList.remove('show');
+      } else {
+        this.style.backgroundColor = '';
+        rightHint.classList.remove('show');
+        leftHint.classList.remove('show');
+      }
+    });
+
+    card.addEventListener('mouseup', function(e) {
+      if (!isSwiping || !currentCard) return;
+      const finalDelta = e.clientX - startX;
+      if (finalDelta > SWIPE_THRESHOLD) {
+        const leadId = parseInt(this.dataset.id);
+        markContacted(leadId, this);
+      } else if (finalDelta < -SWIPE_THRESHOLD) {
+        const leadId = parseInt(this.dataset.id);
+        deleteLeadSwipe(leadId, this);
+      } else {
+        this.style.transition = 'transform 0.3s ease, background 0.3s ease';
+        this.style.transform = 'translateX(0)';
+        this.style.backgroundColor = '';
+        this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+        setTimeout(() => {
+          this.style.transition = '';
+          this.classList.remove('swiping');
+        }, 300);
+      }
+      isSwiping = false;
+      currentCard = null;
+    });
+
+    // Prevent context menu on long press
+    card.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+    });
   });
+
+  function markContacted(leadId, card) {
+    // Update status via API
+    const formData = new FormData();
+    formData.append('field', 'status');
+    formData.append('value', 'Contacted');
+    fetch(`/lead/${leadId}/update`, { method: 'POST', body: formData })
+      .then(() => {
+        // Animate card away
+        card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+        card.style.transform = 'translateX(400px)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.remove();
+          showToast('✅ Marked as Contacted');
+          notifyOtherTabs();
+          showUndoToast('Marked Contacted');
+        }, 400);
+      })
+      .catch(() => {
+        // on error, snap back
+        card.style.transition = 'transform 0.3s ease, background 0.3s ease';
+        card.style.transform = 'translateX(0)';
+        card.style.backgroundColor = '';
+        card.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+        setTimeout(() => {
+          card.style.transition = '';
+          card.classList.remove('swiping');
+        }, 300);
+      });
+  }
+
+  function deleteLeadSwipe(leadId, card) {
+    if (!confirm('Delete this lead?')) {
+      // snap back
+      card.style.transition = 'transform 0.3s ease, background 0.3s ease';
+      card.style.transform = 'translateX(0)';
+      card.style.backgroundColor = '';
+      card.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+      setTimeout(() => {
+        card.style.transition = '';
+        card.classList.remove('swiping');
+      }, 300);
+      return;
+    }
+    fetch(`/lead/${leadId}/delete`, { method: 'POST' })
+      .then(() => {
+        card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+        card.style.transform = 'translateX(-400px)';
+        card.style.opacity = '0';
+        setTimeout(() => {
+          card.remove();
+          showToast('🗑 Lead deleted');
+          notifyOtherTabs();
+          showUndoToast('Deleted lead');
+        }, 400);
+      })
+      .catch(() => {
+        card.style.transition = 'transform 0.3s ease, background 0.3s ease';
+        card.style.transform = 'translateX(0)';
+        card.style.backgroundColor = '';
+        card.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+        setTimeout(() => {
+          card.style.transition = '';
+          card.classList.remove('swiping');
+        }, 300);
+      });
+  }
 });
 
 // ── Auto-refresh on visibility change ──
