@@ -6,7 +6,7 @@ Open:     http://localhost:5000
 
 import os
 from datetime import date
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, Response
 from dotenv import load_dotenv
 from database import (
     init_db, fetch_all_leads, fetch_lead, fetch_daily_queue,
@@ -16,12 +16,19 @@ from outreach import fill_template, get_template_names, generate_dm
 
 load_dotenv()
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 init_db()
 
 STATUSES  = ["Not Contacted", "Contacted", "Converted", "Not Interested"]
 CHANNELS  = ["", "Instagram", "WhatsApp", "Email", "LinkedIn"]
 REPLIED   = ["", "Yes", "No", "Pending"]
 CATEGORIES = ["Interior Designer", "Real Estate Agent", "Builder", "Architect"]
+
+# ── Helper to get old field value ──────────────────────────────────────────────
+
+def get_old_value(lead_id: int, field: str):
+    lead = fetch_lead(lead_id)
+    return lead.get(field, '')
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -33,8 +40,20 @@ def index():
     tab      = request.args.get("tab", "leads")
 
     all_leads = fetch_all_leads()
-    filtered  = all_leads
+    
+    # Base filtering
+    filtered = all_leads
 
+    # Apply tab-specific filtering first
+    if tab == 'contacted':
+        filtered = [l for l in filtered if l['status'] == 'Contacted']
+        # Ignore status parameter for this tab (already filtered)
+        status = ''
+    # For 'leads' tab, apply status filter if provided
+    elif tab == 'leads' and status:
+        filtered = [l for l in filtered if l['status'] == status]
+
+    # Apply search and category filters (common to all tabs that display leads)
     if q:
         filtered = [l for l in filtered if
             q in l["name"].lower() or
@@ -42,8 +61,6 @@ def index():
             q in (l["instagram"] or "").lower()]
     if category:
         filtered = [l for l in filtered if l["category"] == category]
-    if status:
-        filtered = [l for l in filtered if l["status"] == status]
 
     stats     = get_stats()
     due       = fetch_due_followups()
@@ -68,24 +85,60 @@ def index():
         today=date.today().isoformat(),
     )
 
-# ── Inline field update (HTMX) ────────────────────────────────────────────────
+# ── Inline field update (HTMX) with undo support ──────────────────────────────
 
 @app.route("/lead/<int:lead_id>/update", methods=["POST"])
 def update_lead(lead_id):
     field = request.form.get("field")
     value = request.form.get("value", "")
     try:
+        # Get old value before update
+        old_value = get_old_value(lead_id, field)
+        
+        # Perform update
         update_field(lead_id, field, value)
+        
+        # Store undo action in session
+        if 'undo_stack' not in session:
+            session['undo_stack'] = []
+        session['undo_stack'].append({
+            'lead_id': lead_id,
+            'field': field,
+            'old_value': old_value,
+            'new_value': value
+        })
+        # Keep stack size manageable
+        if len(session['undo_stack']) > 50:
+            session['undo_stack'] = session['undo_stack'][-50:]
+        session.modified = True
+
+        # Return the updated cell HTML
         lead = fetch_lead(lead_id)
-        # Return just the updated cell HTML
         return _cell_html(lead, field)
     except Exception as e:
         return f'<span style="color:red">Error: {e}</span>', 400
+
+# ── Undo route ────────────────────────────────────────────────────────────────
+
+@app.route("/undo", methods=["POST"])
+def undo():
+    stack = session.get('undo_stack', [])
+    if not stack:
+        return jsonify({'status': 'empty', 'message': 'Nothing to undo'})
+    
+    action = stack.pop()
+    # Revert the change
+    update_field(action['lead_id'], action['field'], action['old_value'])
+    session['undo_stack'] = stack
+    session.modified = True
+    
+    return jsonify({'status': 'ok'})
 
 # ── Delete ────────────────────────────────────────────────────────────────────
 
 @app.route("/lead/<int:lead_id>/delete", methods=["POST"])
 def remove_lead(lead_id):
+    # Optionally store delete action for undo? For simplicity we skip.
     delete_lead(lead_id)
     return ""   # HTMX removes the row
 
@@ -119,7 +172,6 @@ def export_csv():
     writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
     writer.writeheader()
     writer.writerows(leads)
-    from flask import Response
     return Response(
         output.getvalue(),
         mimetype="text/csv",
