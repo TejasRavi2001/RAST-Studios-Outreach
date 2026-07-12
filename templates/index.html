@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAST Studios — Lead Dashboard</title>
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #08141c;
+  --surface:  #10232d;
+  --dark:     #071018;
+  --muted:    #8da1aa;
+  --border:   rgba(255,255,255,0.08);
+  --gold:     #b89b65;
+  --green:    #4caf72;
+  --green-bg: rgba(76,175,114,0.15);
+  --amber:    #d6b45a;
+  --amber-bg: rgba(214,180,90,0.15);
+  --red:      #f87171;
+  --red-bg:   rgba(248,113,113,0.15);
+  --blue:     #60a5fa;
+  --blue-bg:  rgba(96,165,250,0.15);
+  --radius:   10px;
+  --shadow:   0 10px 30px rgba(0,0,0,0.25);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: #d8e1e6;
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── Header ── */
+header {
+  background: var(--dark);
+  color: #f5f0e8;
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.header-left { display: flex; align-items: baseline; gap: 12px; }
+.logo { font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -0.01em; }
+.logo-sub { font-size: 0.7rem; color: #777; text-transform: uppercase; letter-spacing: 0.12em; }
+.header-right { display: flex; gap: 10px; align-items: center; }
+.btn-export {
+  padding: 7px 16px;
+  background: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.btn-export:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── Follow-up Banner ── */
+.banner {
+  background: #7c3aed;
+  color: white;
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.banner a { color: #e9d5ff; text-decoration: underline; cursor: pointer; }
+
+/* ── KPI Bar ── */
+.kpi-bar {
+  display: flex;
+  gap: 12px;
+  padding: 20px 28px;
+  background: #071018;
+  overflow-x: auto;
+}
+.kpi {
+  flex: 1;
+  min-width: 110px;
+  background: #242424;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  color: #f5f0e8;
+}
+.kpi-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.14em; color: #666; margin-bottom: 5px; }
+.kpi-value { font-family: 'DM Serif Display', serif; font-size: 2rem; line-height: 1; }
+.kpi-value.gold  { color: var(--gold); }
+.kpi-value.green { color: #6ee7b7; }
+.kpi-value.red   { color: #f87171; }
+
+/* ── Main layout ── */
+.main { padding: 20px 28px; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+}
+.tab-btn {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.tab-btn:hover { color: var(--dark); }
+.tab-btn.active { color: var(--dark); border-bottom-color: var(--dark); }
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.toolbar input[type="text"],
+.toolbar select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.83rem;
+  background: var(--surface);
+  color: var(--dark);
+  outline: none;
+  transition: border 0.15s;
+}
+.toolbar input[type="text"] { flex: 1; min-width: 200px; }
+.toolbar input[type="text"]:focus,
+.toolbar select:focus { border-color: var(--dark); }
+.btn-filter {
+  padding: 8px 18px;
+  background: var(--dark);
+  color: #f5f0e8;
+  border: none;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.83rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+.lead-count { font-size: 0.78rem; color: var(--muted); margin-left: auto; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  font-size: 0.82rem;
+  min-width: 1100px;
+}
+thead { background: var(--dark); color: #f5f0e8; position: sticky; top: 57px; z-index: 10; }
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+tbody tr:hover { background: #faf7f2; }
+tbody tr.htmx-swapping { opacity: 0.5; transition: opacity 0.3s; }
+td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  max-width: 200px;
+}
+td.name-cell { font-weight: 600; }
+
+/* ── Frozen Business column ── */
+thead th:first-child,
+tbody td:first-child {
+  position: sticky;
+  left: 0;
+}
+thead th:first-child {
+  z-index: 12;
+  background: var(--dark);
+  box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.45),
+              inset -1px 0 0 rgba(255, 255, 255, 0.08);
+}
+tbody td:first-child {
+  z-index: 2;
+  background: var(--surface);
+  box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.35),
+              inset -1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Inline editable cells ── */
+.editable {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 60px;
+  min-height: 26px;
+  transition: background 0.15s;
+}
+.editable:hover { background: rgba(255,255,255,0.08); }
+.editable:empty::before { content: "—"; color: #ccc; }
+
+.inline-form { display: inline-flex; gap: 4px; align-items: center; }
+.inline-input {
+  padding: 4px 8px;
+  border: 1px solid var(--dark);
+  border-radius: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  width: 140px;
+  outline: none;
+}
+.inline-select {
+  padding: 4px 6px;
+  border: 1px solid var(--dark);
+  border-radius: 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  background: #10232d;
+}
+.btn-save-inline {
+  padding: 4px 10px;
+  background: var(--dark);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-cancel-inline {
+  padding: 4px 8px;
+  background: #e8e4dd;
+  color: var(--dark);
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.badge-not      { background: var(--amber-bg); color: var(--amber); }
+.badge-contacted { background: var(--green-bg); color: var(--green); }
+.badge-converted { background: var(--blue-bg);  color: var(--blue); }
+.badge-nope     { background: var(--red-bg);    color: var(--red); }
+.badge-replied  { background: var(--green-bg);  color: var(--green); }
+.badge-pending  { background: var(--amber-bg);  color: var(--amber); }
+
+/* ── Action buttons ── */
+.actions { display: flex; gap: 6px; align-items: center; }
+.btn-wa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  background: #25D366;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.btn-ig {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.btn-copy {
+  padding: 4px 10px;
+  background: var(--dark);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.btn-copy:hover { background: #333; }
+.btn-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  background: var(--red-bg);
+  color: var(--red);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-del:hover { background: #ffc0c0; }
+
+/* ── Message modal ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #10232d;
+  border-radius: 14px;
+  padding: 28px;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+.modal-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
+.modal select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+  outline: none;
+}
+.modal textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 140px;
+  outline: none;
+  line-height: 1.6;
+}
+.modal-footer { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+.btn-primary {
+  padding: 8px 20px;
+  background: var(--dark);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-secondary {
+  padding: 8px 16px;
+  background: var(--border);
+  color: var(--dark);
+  border: none;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-gold {
+  padding: 8px 16px;
+  background: var(--gold);
+  color: var(--dark);
+  border: none;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+.copy-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dark);
+  color: white;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.copy-toast.show { opacity: 1; }
+
+/* ── Queue tab ── */
+.queue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.queue-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--dark);
+}
+.queue-card h4 { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
+.queue-card .cat { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.queue-card .addr { font-size: 0.82rem; color: #555; margin-bottom: 12px; }
+.queue-card .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Due followups ── */
+.due-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.due-card h4 { font-weight: 600; font-size: 0.9rem; }
+.due-card .due-meta { font-size: 0.78rem; color: var(--muted); }
+.due-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+
+/* ── Stats ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.stat-card .stat-val { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--dark); }
+.stat-card .stat-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+
+/* ── Misc ── */
+.empty-state { text-align: center; padding: 48px; color: var(--muted); }
+a { color: inherit; }
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator { display: inline; }
+
+/* Dark theme fixes */
+
+/* Table row hover */
+tbody tr:hover {
+  background: rgba(255,255,255,0.05) !important;
+}
+tbody tr:hover td:first-child {
+  background: #152530 !important;
+}
+
+/* Editable cell hover */
+.editable:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #d8e1e6;
+}
+
+/* All dropdowns */
+select,
+.inline-select,
+.toolbar select,
+.modal select {
+  background: #0d1b24 !important;
+  color: #d8e1e6 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* Dropdown options */
+select option {
+  background: #0d1b24 !important;
+  color: #d8e1e6 !important;
+}
+
+/* Text inputs */
+input,
+textarea {
+  background: #0d1b24 !important;
+  color: #d8e1e6 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+/* Empty cell placeholder */
+.editable:empty::before {
+  color: #71808a !important;
+}
+
+/* ── Mobile Card View ── */
+.leads-cards {
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+}
+.lead-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--dark);
+  position: relative;
+  touch-action: pan-y;
+  user-select: none;
+  transition: transform 0.2s;
+}
+.lead-card .card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.lead-card .card-row:last-child { border-bottom: none; }
+.lead-card .label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.lead-card .value { font-weight: 500; word-break: break-word; }
+.lead-card .card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.lead-card .swipe-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--muted);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.lead-card .swipe-left { right: 8px; }
+.lead-card .swipe-right { left: 8px; }
+
+/* Hide table on mobile, show cards */
+@media screen and (max-width: 768px) {
+  .table-wrap { display: none; }
+  .leads-cards { display: flex; }
+  .kpi-bar { padding: 12px; gap: 8px; }
+  .kpi { padding: 12px; min-width: 80px; }
+  .kpi-value { font-size: 1.4rem; }
+  .main { padding: 12px; }
+  header { padding: 12px; }
+  .banner { padding: 8px 16px; font-size: 0.75rem; flex-wrap: wrap; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar input[type="text"] { min-width: auto; }
+  .lead-count { margin-left: 0; }
+  .tabs .tab-btn { font-size: 0.75rem; padding: 6px 12px; }
+}
+
+/* ── Undo Toast ── */
+.undo-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+.undo-toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.undo-toast .undo-btn {
+  background: #7c3aed;
+  border: none;
+  color: white;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.undo-toast .undo-btn:hover { background: #6d28d9; }
+.undo-toast .dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-left">
+    <span class="logo">🏛️ RAST Studios</span>
+    <span class="logo-sub">Lead Dashboard</span>
+  </div>
+  <div class="header-right">
+    <a href="/export" class="btn-export">⬇ Export CSV</a>
+  </div>
+</header>
+
+<!-- Follow-up banner -->
+{% if due %}
+<div class="banner">
+  📅 <strong>{{ due|length }} follow-up{{ 's' if due|length != 1 }} due today</strong>
+  <a onclick="switchTab('queue')">View in Queue tab →</a>
+</div>
+{% endif %}
+
+<!-- KPI Bar -->
+<div class="kpi-bar">
+  <div class="kpi">
+    <div class="kpi-label">Total Leads</div>
+    <div class="kpi-value">{{ stats.total }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Contacted</div>
+    <div class="kpi-value gold">{{ stats.contacted }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Remaining</div>
+    <div class="kpi-value">{{ stats.uncontacted }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Replied</div>
+    <div class="kpi-value green">{{ stats.replied }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Reply Rate</div>
+    <div class="kpi-value">{{ stats.reply_rate }}<span style="font-size:1rem">%</span></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Follow-ups Due</div>
+    <div class="kpi-value red">{{ stats.due }}</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <a class="tab-btn {% if tab == 'leads' %}active{% endif %}"
+       href="/?tab=leads&q={{ q }}&category={{ sel_category }}&status={{ sel_status }}">
+      📋 All Leads
+    </a>
+    <a class="tab-btn {% if tab == 'queue' %}active{% endif %}"
+       href="/?tab=queue" id="queue-tab-btn">
+      ⚡ Today's Queue
+      {% if due %}<span style="background:#7c3aed;color:white;padding:1px 7px;border-radius:10px;font-size:0.65rem;margin-left:4px">{{ due|length }}</span>{% endif %}
+    </a>
+  </div>
+
+  <!-- ── LEADS TAB ── -->
+  {% if tab == 'leads' %}
+
+  <form class="toolbar" method="GET" action="/">
+    <input type="hidden" name="tab" value="leads">
+    <input type="text" name="q" placeholder="🔍 Search name, area, instagram…" value="{{ q }}">
+    <select name="category">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat }}" {% if cat == sel_category %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="">All Statuses</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {% if s == sel_status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter">Filter</button>
+    <span class="lead-count">{{ leads|length }} lead{{ 's' if leads|length != 1 }}</span>
+  </form>
+
+  {% if leads %}
+  <!-- Desktop Table -->
+  <div class="table-wrap" id="leads-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Business</th>
+          <th>Category</th>
+          <th>Area</th>
+          <th>Phone</th>
+          <th>Instagram</th>
+          <th>Status</th>
+          <th>Channel</th>
+          <th>Replied</th>
+          <th>Last Contacted</th>
+          <th>Follow-up</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in leads %}
+        <tr id="row-{{ lead.id }}">
+
+          <!-- Business name -->
+          <td class="name-cell">
+            {% if lead.website %}
+              <a href="{{ lead.website }}" target="_blank" style="text-decoration:none;color:inherit">
+                {{ lead.name }}
+              </a>
+            {% else %}
+              {{ lead.name }}
+            {% endif %}
+          </td>
+
+          <!-- Category -->
+          <td>{{ lead.category }}</td>
+
+          <!-- Address (first part) -->
+          <td>{{ (lead.address or '').split(',')[0] }}</td>
+
+          <!-- Phone (tap-to-call) -->
+          <td>
+            {% if lead.phone %}
+              <a href="tel:+91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" style="color:var(--blue);text-decoration:none;">
+                {{ lead.phone }}
+              </a>
+            {% else %}—{% endif %}
+          </td>
+
+          <!-- Instagram (inline editable) -->
+          <td>
+            <span
+              class="editable"
+              onclick="startEdit(this, {{ lead.id }}, 'instagram', '{{ lead.instagram | e }}')"
+              id="instagram-{{ lead.id }}"
+            >{{ lead.instagram or '' }}</span>
+          </td>
+
+          <!-- Status (click to cycle) -->
+          <td>
+            <span
+              class="badge {% if lead.status == 'Contacted' %}badge-contacted{% elif lead.status == 'Converted' %}badge-converted{% elif lead.status == 'Not Interested' %}badge-nope{% else %}badge-not{% endif %}"
+              onclick="cycleStatus({{ lead.id }}, this)"
+              title="Click to change"
+            >{{ lead.status }}</span>
+          </td>
+
+          <!-- Channel (click to cycle) -->
+          <td>
+            <select
+              onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)"
+              style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer"
+            >
+             <option value="" {% if not lead.channel %}selected{% endif %}>—</option>
+             <option value="WhatsApp"  {% if lead.channel == 'WhatsApp'  %}selected{% endif %}>WhatsApp</option>
+             <option value="Instagram" {% if lead.channel == 'Instagram' %}selected{% endif %}>Instagram</option>
+             <option value="Email"     {% if lead.channel == 'Email'     %}selected{% endif %}>Email</option>
+             <option value="LinkedIn"  {% if lead.channel == 'LinkedIn'  %}selected{% endif %}>LinkedIn</option>
+            </select>
+          </td>
+
+          <!-- Replied (click to cycle) -->
+          <td>
+            <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)"style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer">
+            <option value="" {% if not lead.replied %}selected{% endif %}>—</option>
+            <option value="Yes" {% if lead.replied == 'Yes' %}selected{% endif %}>✅ Yes</option>
+            <option value="No"  {% if lead.replied == 'No'  %}selected{% endif %}>❌ No</option>
+            </select>
+          </td>
+
+          <!-- Last contacted (inline editable date) -->
+          <td>
+            <span
+              class="editable"
+              onclick="startEdit(this, {{ lead.id }}, 'last_contacted', '{{ lead.last_contacted | e }}', 'date')"
+              id="last_contacted-{{ lead.id }}"
+            >{{ lead.last_contacted or '' }}</span>
+          </td>
+
+          <!-- Follow-up date (inline editable date) -->
+          <td>
+            <span
+              class="editable {% if lead.follow_up_date and lead.follow_up_date <= today %}badge badge-nope{% endif %}"
+              onclick="startEdit(this, {{ lead.id }}, 'follow_up_date', '{{ lead.follow_up_date | e }}', 'date')"
+              id="follow_up_date-{{ lead.id }}"
+              title="Click to set follow-up date"
+            >{{ lead.follow_up_date or '' }}</span>
+          </td>
+
+          <!-- Notes inline textarea -->
+            <td>
+              <textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)"
+              style="width:180px;height:52px;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4"
+              placeholder="Add notes…">
+              {{ lead.notes or '' }}</textarea>
+            </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="actions">
+              <!-- WhatsApp -->
+              {% if lead.phone %}
+              <a class="btn-wa" href="https://wa.me/91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" target="_blank" title="WhatsApp">💬</a>
+              {% endif %}
+
+              <!-- Instagram -->
+              {% if lead.instagram %}
+              <a class="btn-ig" href="https://instagram.com/{{ lead.instagram | replace('@','') }}" target="_blank" title="Instagram">📷</a>
+              {% endif %}
+
+              <!-- Copy DM -->
+              <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ DM</button>
+
+              <!-- Delete -->
+              <button
+                class="btn-del"
+                hx-post="/lead/{{ lead.id }}/delete"
+                hx-target="#row-{{ lead.id }}"
+                hx-swap="outerHTML"
+                hx-confirm="Delete {{ lead.name }}?"
+                title="Delete"
+              >🗑</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Mobile Cards -->
+  <div class="leads-cards" id="leads-cards">
+    {% for lead in leads %}
+    <div class="lead-card" data-id="{{ lead.id }}" data-name="{{ lead.name }}">
+      <div class="card-row">
+        <span class="label">Business</span>
+        <span class="value">
+          {% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}
+        </span>
+      </div>
+      <div class="card-row">
+        <span class="label">Category</span>
+        <span class="value">{{ lead.category }}</span>
+      </div>
+      <div class="card-row">
+        <span class="label">Area</span>
+        <span class="value">{{ (lead.address or '').split(',')[0] }}</span>
+      </div>
+      <div class="card-row">
+        <span class="label">Phone</span>
+        <span class="value">
+          {% if lead.phone %}
+            <a href="tel:+91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" style="color:var(--blue);text-decoration:none;">
+              {{ lead.phone }}
+            </a>
+          {% else %}—{% endif %}
+        </span>
+      </div>
+      <div class="card-row">
+        <span class="label">Instagram</span>
+        <span class="value editable" onclick="startEdit(this, {{ lead.id }}, 'instagram', '{{ lead.instagram | e }}')" id="instagram-{{ lead.id }}">{{ lead.instagram or '' }}</span>
+      </div>
+      <div class="card-row">
+        <span class="label">Status</span>
+        <span class="badge {% if lead.status == 'Contacted' %}badge-contacted{% elif lead.status == 'Converted' %}badge-converted{% elif lead.status == 'Not Interested' %}badge-nope{% else %}badge-not{% endif %}" onclick="cycleStatus({{ lead.id }}, this)">{{ lead.status }}</span>
+      </div>
+      <div class="card-row">
+        <span class="label">Channel</span>
+        <span>
+          <select onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer">
+            <option value="" {% if not lead.channel %}selected{% endif %}>—</option>
+            <option value="WhatsApp"  {% if lead.channel == 'WhatsApp'  %}selected{% endif %}>WhatsApp</option>
+            <option value="Instagram" {% if lead.channel == 'Instagram' %}selected{% endif %}>Instagram</option>
+            <option value="Email"     {% if lead.channel == 'Email'     %}selected{% endif %}>Email</option>
+            <option value="LinkedIn"  {% if lead.channel == 'LinkedIn'  %}selected{% endif %}>LinkedIn</option>
+          </select>
+        </span>
+      </div>
+      <div class="card-row">
+        <span class="label">Replied</span>
+        <span>
+          <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer">
+            <option value="" {% if not lead.replied %}selected{% endif %}>—</option>
+            <option value="Yes" {% if lead.replied == 'Yes' %}selected{% endif %}>✅ Yes</option>
+            <option value="No"  {% if lead.replied == 'No'  %}selected{% endif %}>❌ No</option>
+          </select>
+        </span>
+      </div>
+      <div class="card-row">
+        <span class="label">Last Contacted</span>
+        <span class="editable" onclick="startEdit(this, {{ lead.id }}, 'last_contacted', '{{ lead.last_contacted | e }}', 'date')" id="last_contacted-{{ lead.id }}">{{ lead.last_contacted or '' }}</span>
+      </div>
+      <div class="card-row">
+        <span class="label">Follow‑up</span>
+        <span class="editable {% if lead.follow_up_date and lead.follow_up_date <= today %}badge badge-nope{% endif %}" onclick="startEdit(this, {{ lead.id }}, 'follow_up_date', '{{ lead.follow_up_date | e }}', 'date')" id="follow_up_date-{{ lead.id }}">{{ lead.follow_up_date or '' }}</span>
+      </div>
+      <div class="card-row">
+        <span class="label">Notes</span>
+        <span>
+          <textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)" style="width:100%;height:48px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4">{{ lead.notes or '' }}</textarea>
+        </span>
+      </div>
+      <div class="card-actions">
+        {% if lead.phone %}
+        <a class="btn-wa" href="https://wa.me/91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" target="_blank" title="WhatsApp">💬</a>
+        {% endif %}
+        {% if lead.instagram %}
+        <a class="btn-ig" href="https://instagram.com/{{ lead.instagram | replace('@','') }}" target="_blank" title="Instagram">📷</a>
+        {% endif %}
+        <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ DM</button>
+        <button class="btn-del" onclick="deleteLead({{ lead.id }}, this)">🗑</button>
+      </div>
+      <!-- Swipe hints (hidden on desktop) -->
+      <span class="swipe-hint swipe-right">👈 Swipe</span>
+      <span class="swipe-hint swipe-left">Swipe 👉</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p style="font-size:2rem;margin-bottom:12px">🔍</p>
+    <p>No leads match your filters.</p>
+  </div>
+  {% endif %}
+
+  {% endif %} <!-- end leads tab -->
+
+  <!-- ── QUEUE TAB ── -->
+  {% if tab == 'queue' %}
+
+  {% if due %}
+  <h3 style="font-family:'DM Serif Display',serif;font-size:1.15rem;margin-bottom:12px;color:#7c3aed">
+    📅 Follow-ups Due ({{ due|length }})
+  </h3>
+  <div class="due-section" id="due-section">
+    {% for lead in due %}
+    <div class="due-card" data-id="{{ lead.id }}">
+      <div>
+        <h4>{{ lead.name }}</h4>
+        <div class="due-meta">{{ lead.category }} · Due: {{ lead.follow_up_date }} · Last contacted: {{ lead.last_contacted or 'Never' }}</div>
+      </div>
+      <div class="actions">
+        {% if lead.phone %}
+        <a class="btn-wa" href="https://wa.me/91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') }}" target="_blank">💬</a>
+        {% endif %}
+        <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ DM</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <h3 style="font-family:'DM Serif Display',serif;font-size:1.15rem;margin-bottom:12px">
+    ⚡ Today's Outreach Queue ({{ queue|length }} leads)
+  </h3>
+  <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px">
+    Top uncontacted leads, prioritised by rating and completeness. Work through these today.
+  </p>
+
+  {% if queue %}
+  <div class="queue-grid" id="queue-grid">
+    {% for lead in queue %}
+    <div class="queue-card" data-id="{{ lead.id }}">
+      <h4>
+        {% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}
+      </h4>
+      <div class="cat">{{ lead.category }}{% if lead.rating %} · ⭐ {{ lead.rating }}{% endif %}</div>
+      <div class="addr">{{ lead.address }}</div>
+      <div class="card-actions">
+        {% if lead.phone %}
+        <a class="btn-wa" href="https://wa.me/91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') }}" target="_blank" title="WhatsApp">💬</a>
+        {% endif %}
+        {% if lead.instagram %}
+        <a class="btn-ig" href="https://instagram.com/{{ lead.instagram | replace('@','') }}" target="_blank" title="Instagram">📷</a>
+        {% endif %}
+        <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ Get DM</button>
+        <button
+            class="btn-filter"
+            style="font-size:0.72rem;padding:4px 10px"
+            onclick="quickMark({{ lead.id }}, this)"
+        >✓ Mark Contacted</button>
+        <button
+            class="btn-del"
+            onclick="deleteLead({{ lead.id }}, this)"
+            title="Delete lead"
+>🗑</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p style="font-size:2rem;margin-bottom:12px">🎉</p>
+    <p>All caught up! No uncontacted leads remaining.</p>
+  </div>
+  {% endif %}
+
+  {% endif %} <!-- end queue tab -->
+
+</div> <!-- end main -->
+
+<!-- Message Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3>✉ Outreach Message</h3>
+    <p class="modal-sub" id="modal-lead-name"></p>
+    <select id="template-select" onchange="loadTemplate()">
+      {% for t in templates %}
+      <option value="{{ t }}">{{ t }}</option>
+      {% endfor %}
+    </select>
+    <textarea id="modal-message" rows="7"></textarea>
+    <div class="modal-footer">
+      <button class="btn-gold" onclick="generateAI()">✨ AI Generate</button>
+      <button class="btn-primary" onclick="copyMessage()">📋 Copy Message</button>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Undo Toast -->
+<div class="undo-toast" id="undoToast">
+  <span id="undoMessage">Change made</span>
+  <button class="undo-btn" id="undoBtn">↩ Undo</button>
+  <button class="dismiss-btn" id="undoDismiss">&times;</button>
+</div>
+
+<!-- Copy toast -->
+<div class="copy-toast" id="toast">✓ Copied to clipboard!</div>
+
+<script>
+// ── BroadcastChannel for cross-tab sync ──
+const channel = new BroadcastChannel('rast_sync');
+channel.onmessage = (e) => {
+  if (e.data === 'refresh') {
+    // Reload the current page content via HTMX (main area)
+    htmx.ajax('GET', window.location.pathname + window.location.search, { target: '.main', swap: 'outerHTML' });
+  }
+};
+
+function notifyOtherTabs() {
+  channel.postMessage('refresh');
+}
+
+// ── Undo System ──
+let undoStack = []; // client side not needed, we rely on server. But we need to show toast.
+let undoTimeout = null;
+
+function showUndoToast(message) {
+  const toast = document.getElementById('undoToast');
+  document.getElementById('undoMessage').textContent = message;
+  toast.classList.add('show');
+  clearTimeout(undoTimeout);
+  undoTimeout = setTimeout(() => toast.classList.remove('show'), 10000);
+}
+
+// Undo button
+document.getElementById('undoBtn').addEventListener('click', function() {
+  fetch('/undo', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        document.getElementById('undoToast').classList.remove('show');
+        // Refresh the page to reflect undo
+        window.location.reload();
+      } else {
+        alert('Nothing to undo.');
+      }
+    })
+    .catch(() => alert('Undo failed.'));
+});
+document.getElementById('undoDismiss').addEventListener('click', function() {
+  document.getElementById('undoToast').classList.remove('show');
+});
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+let currentLeadId = null;
+
+function saveFieldDirect(leadId, field, value) {
+  const formData = new FormData();
+  formData.append('field', field);
+  formData.append('value', value);
+  fetch(`/lead/${leadId}/update`, { method: 'POST', body: formData })
+    .then(() => {
+      showToast('✓ Saved');
+      notifyOtherTabs();
+      showUndoToast('Updated ' + field);
+    });
+}
+function openModal(leadId, leadName) {
+  currentLeadId = leadId;
+  document.getElementById('modal-lead-name').textContent = leadName;
+  document.getElementById('modal').classList.add('open');
+  loadTemplate();
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  currentLeadId = null;
+}
+function loadTemplate() {
+  if (!currentLeadId) return;
+  const tpl = document.getElementById('template-select').value;
+  fetch(`/lead/${currentLeadId}/message?template=${encodeURIComponent(tpl)}`)
+    .then(r => r.json())
+    .then(d => { document.getElementById('modal-message').value = d.message; });
+}
+function generateAI() {
+  if (!currentLeadId) return;
+  const btn = event.target;
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+  fetch(`/lead/${currentLeadId}/ai-message`)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('modal-message').value = d.message;
+      btn.textContent = '✨ AI Generate';
+      btn.disabled = false;
+    });
+}
+function copyMessage() {
+  const msg = document.getElementById('modal-message').value;
+  navigator.clipboard.writeText(msg).then(() => {
+    showToast('✓ Copied to clipboard!');
+    closeModal();
+  });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── Inline editing ─────────────────────────────────────────────────────────
+function startEdit(el, leadId, field, currentValue, inputType = 'text') {
+  const form = document.createElement('form');
+  form.className = 'inline-form';
+  form.onsubmit = (e) => { e.preventDefault(); saveField(leadId, field, input.value, el); };
+
+  const input = document.createElement('input');
+  input.type = inputType;
+  input.className = 'inline-input';
+  input.value = currentValue;
+  input.style.width = inputType === 'date' ? '140px' : '160px';
+
+  const save = document.createElement('button');
+  save.type = 'submit';
+  save.className = 'btn-save-inline';
+  save.textContent = '✓';
+
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'btn-cancel-inline';
+  cancel.textContent = '✕';
+  cancel.onclick = () => el.style.display = 'inline-block';
+
+  form.append(input, save, cancel);
+  el.style.display = 'none';
+  el.parentNode.insertBefore(form, el.nextSibling);
+  input.focus();
+
+  cancel.onclick = () => { form.remove(); el.style.display = 'inline-block'; };
+}
+
+function saveField(leadId, field, value, el) {
+  const formData = new FormData();
+  formData.append('field', field);
+  formData.append('value', value);
+  fetch(`/lead/${leadId}/update`, { method: 'POST', body: formData })
+    .then(() => {
+      el.textContent = value || '';
+      el.style.display = 'inline-block';
+      const form = el.nextSibling;
+      if (form && form.tagName === 'FORM') form.remove();
+      showToast('✓ Saved');
+      notifyOtherTabs();
+      showUndoToast('Updated ' + field);
+    });
+}
+
+// ── Cycle status ──────────────────────────────────────────────────────────
+function cycleStatus(leadId, el) {
+  const statuses = ['Not Contacted', 'Contacted', 'Converted', 'Not Interested'];
+  const current  = el.textContent.trim();
+  const idx      = statuses.indexOf(current);
+  const next     = statuses[(idx + 1) % statuses.length];
+  const formData = new FormData();
+  formData.append('field', 'status');
+  formData.append('value', next);
+  fetch(`/lead/${leadId}/update`, { method: 'POST', body: formData })
+    .then(() => {
+      el.textContent = next;
+      el.className = 'badge ' + (
+        next === 'Contacted'      ? 'badge-contacted' :
+        next === 'Converted'      ? 'badge-converted' :
+        next === 'Not Interested' ? 'badge-nope'      : 'badge-not'
+      );
+      showToast('✓ Status updated to ' + next);
+      notifyOtherTabs();
+      showUndoToast('Status changed to ' + next);
+    });
+}
+
+// ── Quick mark from queue ──────────────────────────────────────────────────
+function quickMark(leadId, btn) {
+  const formData = new FormData();
+  formData.append('field', 'status');
+  formData.append('value', 'Contacted');
+  fetch(`/lead/${leadId}/update`, { method: 'POST', body: formData })
+    .then(() => {
+      const card = btn.closest('.queue-card');
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transition = 'opacity 0.3s';
+        setTimeout(() => card.remove(), 300);
+      }
+      showToast('✓ Marked as Contacted');
+      notifyOtherTabs();
+      showUndoToast('Marked Contacted');
+    });
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+  window.location.href = '/?tab=' + tab;
+}
+
+// ── Delete lead (for cards) ──────────────────────────────────────────────
+function deleteLead(leadId, btn) {
+  if (!confirm('Delete this lead permanently?')) return;
+  fetch(`/lead/${leadId}/delete`, { method: 'POST' })
+    .then(() => {
+      const card = btn.closest('.lead-card, .queue-card, .due-card');
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transition = 'opacity 0.3s';
+        setTimeout(() => card.remove(), 300);
+      } else {
+        // table row
+        const row = document.getElementById('row-' + leadId);
+        if (row) row.remove();
+      }
+      showToast('🗑 Lead deleted');
+      notifyOtherTabs();
+      showUndoToast('Deleted lead');
+    });
+}
+
+// ── Mobile Swipe for cards ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  const cards = document.querySelectorAll('.lead-card');
+  let startX = 0;
+  let currentCard = null;
+  const SWIPE_THRESHOLD = 50;
+
+  cards.forEach(card => {
+    card.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX;
+      currentCard = this;
+    }, { passive: true });
+
+    card.addEventListener('touchend', function(e) {
+      if (!currentCard) return;
+      const endX = e.changedTouches[0].clientX;
+      const delta = startX - endX;
+      if (Math.abs(delta) > SWIPE_THRESHOLD) {
+        if (delta > 0) {
+          // Swipe left -> show delete
+          const delBtn = currentCard.querySelector('.btn-del');
+          if (delBtn) {
+            delBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => delBtn.style.transform = '', 300);
+            // Optionally trigger delete after a second click? For now just visual feedback.
+            // We'll let them tap delete.
+          }
+        } else {
+          // Swipe right -> show WhatsApp/DM
+          const waBtn = currentCard.querySelector('.btn-wa');
+          if (waBtn) {
+            waBtn.style.transform = 'scale(1.2)';
+            setTimeout(() => waBtn.style.transform = '', 300);
+          }
+        }
+      }
+      currentCard = null;
+    }, { passive: true });
+  });
+});
+
+// ── Auto-refresh on visibility change (optional) ──────────────────────────
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    // When tab becomes visible, refresh content
+    htmx.ajax('GET', window.location.pathname + window.location.search, { target: '.main', swap: 'outerHTML' });
+  }
+});
+</script>
+</body>
+</html>
