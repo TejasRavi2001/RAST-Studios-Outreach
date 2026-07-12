@@ -128,8 +128,11 @@ header {
   transition: all 0.15s;
   text-decoration: none;
 }
-.tab-btn:hover { color: var(--dark); }
-.tab-btn.active { color: var(--dark); border-bottom-color: var(--dark); }
+.tab-btn:hover { color: #f5f0e8; }
+.tab-btn.active {
+  color: #f5f0e8;
+  border-bottom-color: var(--gold);
+}
 
 /* ── Toolbar ── */
 .toolbar {
@@ -147,23 +150,23 @@ header {
   font-family: 'DM Sans', sans-serif;
   font-size: 0.83rem;
   background: var(--surface);
-  color: var(--dark);
+  color: #d8e1e6;
   outline: none;
   transition: border 0.15s;
 }
 .toolbar input[type="text"] { flex: 1; min-width: 200px; }
 .toolbar input[type="text"]:focus,
-.toolbar select:focus { border-color: var(--dark); }
+.toolbar select:focus { border-color: var(--gold); }
 .btn-filter {
   padding: 8px 18px;
-  background: var(--dark);
-  color: #f5f0e8;
+  background: var(--gold);
+  color: var(--dark);
   border: none;
   border-radius: 6px;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.83rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
 }
 .lead-count { font-size: 0.78rem; color: var(--muted); margin-left: auto; }
 
@@ -190,7 +193,7 @@ tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
 }
-tbody tr:hover { background: #faf7f2; }
+tbody tr:hover { background: rgba(255,255,255,0.05); }
 tbody tr.htmx-swapping { opacity: 0.5; transition: opacity 0.3s; }
 td {
   padding: 10px 14px;
@@ -229,41 +232,45 @@ tbody td:first-child {
   transition: background 0.15s;
 }
 .editable:hover { background: rgba(255,255,255,0.08); }
-.editable:empty::before { content: "—"; color: #ccc; }
+.editable:empty::before { content: "—"; color: #71808a; }
 
 .inline-form { display: inline-flex; gap: 4px; align-items: center; }
 .inline-input {
   padding: 4px 8px;
-  border: 1px solid var(--dark);
+  border: 1px solid var(--gold);
   border-radius: 4px;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.82rem;
   width: 140px;
   outline: none;
+  background: #0d1b24;
+  color: #d8e1e6;
 }
 .inline-select {
   padding: 4px 6px;
-  border: 1px solid var(--dark);
+  border: 1px solid var(--gold);
   border-radius: 4px;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.82rem;
   outline: none;
-  background: #10232d;
+  background: #0d1b24;
+  color: #d8e1e6;
 }
 .btn-save-inline {
   padding: 4px 10px;
-  background: var(--dark);
-  color: white;
+  background: var(--gold);
+  color: var(--dark);
   border: none;
   border-radius: 4px;
   font-size: 0.75rem;
   cursor: pointer;
   white-space: nowrap;
+  font-weight: 600;
 }
 .btn-cancel-inline {
   padding: 4px 8px;
-  background: #e8e4dd;
-  color: var(--dark);
+  background: #333;
+  color: #f5f0e8;
   border: none;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -313,17 +320,17 @@ tbody td:first-child {
 }
 .btn-copy {
   padding: 4px 10px;
-  background: var(--dark);
-  color: white;
+  background: var(--gold);
+  color: var(--dark);
   border: none;
   border-radius: 5px;
   font-size: 0.72rem;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 600;
 }
-.btn-copy:hover { background: #333; }
+.btn-copy:hover { background: #a8894f; }
 .btn-del {
   display: inline-flex;
   align-items: center;
@@ -337,7 +344,7 @@ tbody td:first-child {
   cursor: pointer;
   flex-shrink: 0;
 }
-.btn-del:hover { background: #ffc0c0; }
+.btn-del:hover { background: rgba(248,113,113,0.3); }
 
 /* ── Message modal ── */
 .modal-overlay {
@@ -373,6 +380,8 @@ tbody td:first-child {
   font-size: 0.85rem;
   margin-bottom: 12px;
   outline: none;
+  background: #0d1b24;
+  color: #d8e1e6;
 }
 .modal textarea {
   width: 100%;
@@ -385,23 +394,25 @@ tbody td:first-child {
   min-height: 140px;
   outline: none;
   line-height: 1.6;
+  background: #0d1b24;
+  color: #d8e1e6;
 }
 .modal-footer { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
 .btn-primary {
   padding: 8px 20px;
-  background: var(--dark);
-  color: white;
+  background: var(--gold);
+  color: var(--dark);
   border: none;
   border-radius: 6px;
   font-family: 'DM Sans', sans-serif;
   font-size: 0.85rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
 }
 .btn-secondary {
   padding: 8px 16px;
   background: var(--border);
-  color: var(--dark);
+  color: #d8e1e6;
   border: none;
   border-radius: 6px;
   font-family: 'DM Sans', sans-serif;
@@ -447,11 +458,11 @@ tbody td:first-child {
   border-radius: var(--radius);
   padding: 18px;
   box-shadow: var(--shadow);
-  border-left: 4px solid var(--dark);
+  border-left: 4px solid var(--gold);
 }
 .queue-card h4 { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
 .queue-card .cat { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-.queue-card .addr { font-size: 0.82rem; color: #555; margin-bottom: 12px; }
+.queue-card .addr { font-size: 0.82rem; color: #a0b3bb; margin-bottom: 12px; }
 .queue-card .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ── Due followups ── */
@@ -484,7 +495,7 @@ tbody td:first-child {
   box-shadow: var(--shadow);
   text-align: center;
 }
-.stat-card .stat-val { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--dark); }
+.stat-card .stat-val { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--gold); }
 .stat-card .stat-lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
 
 /* ── Misc ── */
@@ -492,51 +503,6 @@ tbody td:first-child {
 a { color: inherit; }
 .htmx-indicator { display: none; }
 .htmx-request .htmx-indicator { display: inline; }
-
-/* Dark theme fixes */
-
-/* Table row hover */
-tbody tr:hover {
-  background: rgba(255,255,255,0.05) !important;
-}
-tbody tr:hover td:first-child {
-  background: #152530 !important;
-}
-
-/* Editable cell hover */
-.editable:hover {
-  background: rgba(255,255,255,0.08) !important;
-  color: #d8e1e6;
-}
-
-/* All dropdowns */
-select,
-.inline-select,
-.toolbar select,
-.modal select {
-  background: #0d1b24 !important;
-  color: #d8e1e6 !important;
-  border-color: rgba(255,255,255,0.12) !important;
-}
-
-/* Dropdown options */
-select option {
-  background: #0d1b24 !important;
-  color: #d8e1e6 !important;
-}
-
-/* Text inputs */
-input,
-textarea {
-  background: #0d1b24 !important;
-  color: #d8e1e6 !important;
-  border-color: rgba(255,255,255,0.12) !important;
-}
-
-/* Empty cell placeholder */
-.editable:empty::before {
-  color: #71808a !important;
-}
 
 /* ── Mobile Card View ── */
 .leads-cards {
@@ -549,7 +515,7 @@ textarea {
   border-radius: var(--radius);
   padding: 16px;
   box-shadow: var(--shadow);
-  border-left: 4px solid var(--dark);
+  border-left: 4px solid var(--gold);
   position: relative;
   touch-action: pan-y;
   user-select: none;
@@ -703,6 +669,10 @@ textarea {
        href="/?tab=leads&q={{ q }}&category={{ sel_category }}&status={{ sel_status }}">
       📋 All Leads
     </a>
+    <a class="tab-btn {% if tab == 'contacted' %}active{% endif %}"
+       href="/?tab=contacted">
+      📞 Contacted
+    </a>
     <a class="tab-btn {% if tab == 'queue' %}active{% endif %}"
        href="/?tab=queue" id="queue-tab-btn">
       ⚡ Today's Queue
@@ -804,7 +774,7 @@ textarea {
           <td>
             <select
               onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)"
-              style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer"
+              style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer"
             >
              <option value="" {% if not lead.channel %}selected{% endif %}>—</option>
              <option value="WhatsApp"  {% if lead.channel == 'WhatsApp'  %}selected{% endif %}>WhatsApp</option>
@@ -816,7 +786,7 @@ textarea {
 
           <!-- Replied (click to cycle) -->
           <td>
-            <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)"style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer">
+            <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)"style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer">
             <option value="" {% if not lead.replied %}selected{% endif %}>—</option>
             <option value="Yes" {% if lead.replied == 'Yes' %}selected{% endif %}>✅ Yes</option>
             <option value="No"  {% if lead.replied == 'No'  %}selected{% endif %}>❌ No</option>
@@ -845,7 +815,7 @@ textarea {
           <!-- Notes inline textarea -->
             <td>
               <textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)"
-              style="width:180px;height:52px;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4"
+              style="width:180px;height:52px;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4;background:#0d1b24;color:#d8e1e6"
               placeholder="Add notes…">
               {{ lead.notes or '' }}</textarea>
             </td>
@@ -922,7 +892,7 @@ textarea {
       <div class="card-row">
         <span class="label">Channel</span>
         <span>
-          <select onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer">
+          <select onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer">
             <option value="" {% if not lead.channel %}selected{% endif %}>—</option>
             <option value="WhatsApp"  {% if lead.channel == 'WhatsApp'  %}selected{% endif %}>WhatsApp</option>
             <option value="Instagram" {% if lead.channel == 'Instagram' %}selected{% endif %}>Instagram</option>
@@ -934,7 +904,7 @@ textarea {
       <div class="card-row">
         <span class="label">Replied</span>
         <span>
-          <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:white;cursor:pointer">
+          <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer">
             <option value="" {% if not lead.replied %}selected{% endif %}>—</option>
             <option value="Yes" {% if lead.replied == 'Yes' %}selected{% endif %}>✅ Yes</option>
             <option value="No"  {% if lead.replied == 'No'  %}selected{% endif %}>❌ No</option>
@@ -952,7 +922,7 @@ textarea {
       <div class="card-row">
         <span class="label">Notes</span>
         <span>
-          <textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)" style="width:100%;height:48px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4">{{ lead.notes or '' }}</textarea>
+          <textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)" style="width:100%;height:48px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4;background:#0d1b24;color:#d8e1e6">{{ lead.notes or '' }}</textarea>
         </span>
       </div>
       <div class="card-actions">
@@ -979,6 +949,98 @@ textarea {
   {% endif %}
 
   {% endif %} <!-- end leads tab -->
+
+  <!-- ── CONTACTED TAB ── -->
+  {% if tab == 'contacted' %}
+  <div class="table-wrap" id="contacted-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Business</th>
+          <th>Category</th>
+          <th>Area</th>
+          <th>Phone</th>
+          <th>Instagram</th>
+          <th>Status</th>
+          <th>Channel</th>
+          <th>Replied</th>
+          <th>Last Contacted</th>
+          <th>Follow-up</th>
+          <th>Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in leads %}
+        <tr id="row-{{ lead.id }}">
+          <td class="name-cell">
+            {% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}
+          </td>
+          <td>{{ lead.category }}</td>
+          <td>{{ (lead.address or '').split(',')[0] }}</td>
+          <td>{% if lead.phone %}<a href="tel:+91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" style="color:var(--blue);text-decoration:none;">{{ lead.phone }}</a>{% else %}—{% endif %}</td>
+          <td><span class="editable" onclick="startEdit(this, {{ lead.id }}, 'instagram', '{{ lead.instagram | e }}')" id="instagram-{{ lead.id }}">{{ lead.instagram or '' }}</span></td>
+          <td><span class="badge badge-contacted" onclick="cycleStatus({{ lead.id }}, this)">{{ lead.status }}</span></td>
+          <td>
+            <select onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer">
+              <option value="" {% if not lead.channel %}selected{% endif %}>—</option>
+              <option value="WhatsApp"  {% if lead.channel == 'WhatsApp'  %}selected{% endif %}>WhatsApp</option>
+              <option value="Instagram" {% if lead.channel == 'Instagram' %}selected{% endif %}>Instagram</option>
+              <option value="Email"     {% if lead.channel == 'Email'     %}selected{% endif %}>Email</option>
+              <option value="LinkedIn"  {% if lead.channel == 'LinkedIn'  %}selected{% endif %}>LinkedIn</option>
+            </select>
+          </td>
+          <td>
+            <select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer">
+              <option value="" {% if not lead.replied %}selected{% endif %}>—</option>
+              <option value="Yes" {% if lead.replied == 'Yes' %}selected{% endif %}>✅ Yes</option>
+              <option value="No"  {% if lead.replied == 'No'  %}selected{% endif %}>❌ No</option>
+            </select>
+          </td>
+          <td><span class="editable" onclick="startEdit(this, {{ lead.id }}, 'last_contacted', '{{ lead.last_contacted | e }}', 'date')" id="last_contacted-{{ lead.id }}">{{ lead.last_contacted or '' }}</span></td>
+          <td><span class="editable {% if lead.follow_up_date and lead.follow_up_date <= today %}badge badge-nope{% endif %}" onclick="startEdit(this, {{ lead.id }}, 'follow_up_date', '{{ lead.follow_up_date | e }}', 'date')" id="follow_up_date-{{ lead.id }}">{{ lead.follow_up_date or '' }}</span></td>
+          <td><textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)" style="width:180px;height:52px;padding:5px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4;background:#0d1b24;color:#d8e1e6" placeholder="Add notes…">{{ lead.notes or '' }}</textarea></td>
+          <td>
+            <div class="actions">
+              {% if lead.phone %}<a class="btn-wa" href="https://wa.me/91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" target="_blank">💬</a>{% endif %}
+              {% if lead.instagram %}<a class="btn-ig" href="https://instagram.com/{{ lead.instagram | replace('@','') }}" target="_blank">📷</a>{% endif %}
+              <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ DM</button>
+              <button class="btn-del" hx-post="/lead/{{ lead.id }}/delete" hx-target="#row-{{ lead.id }}" hx-swap="outerHTML" hx-confirm="Delete {{ lead.name }}?">🗑</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <!-- Mobile cards for contacted -->
+  <div class="leads-cards" id="contacted-cards">
+    {% for lead in leads %}
+    <div class="lead-card" data-id="{{ lead.id }}">
+      <div class="card-row"><span class="label">Business</span><span class="value">{% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}</span></div>
+      <div class="card-row"><span class="label">Category</span><span class="value">{{ lead.category }}</span></div>
+      <div class="card-row"><span class="label">Area</span><span class="value">{{ (lead.address or '').split(',')[0] }}</span></div>
+      <div class="card-row"><span class="label">Phone</span><span class="value">{% if lead.phone %}<a href="tel:+91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" style="color:var(--blue);text-decoration:none;">{{ lead.phone }}</a>{% else %}—{% endif %}</span></div>
+      <div class="card-row"><span class="label">Instagram</span><span class="value editable" onclick="startEdit(this, {{ lead.id }}, 'instagram', '{{ lead.instagram | e }}')" id="instagram-{{ lead.id }}">{{ lead.instagram or '' }}</span></div>
+      <div class="card-row"><span class="label">Status</span><span class="badge badge-contacted" onclick="cycleStatus({{ lead.id }}, this)">{{ lead.status }}</span></div>
+      <div class="card-row"><span class="label">Channel</span><span><select onchange="saveFieldDirect({{ lead.id }}, 'channel', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer"><option value="" {% if not lead.channel %}selected{% endif %}>—</option><option value="WhatsApp" {% if lead.channel == 'WhatsApp' %}selected{% endif %}>WhatsApp</option><option value="Instagram" {% if lead.channel == 'Instagram' %}selected{% endif %}>Instagram</option><option value="Email" {% if lead.channel == 'Email' %}selected{% endif %}>Email</option><option value="LinkedIn" {% if lead.channel == 'LinkedIn' %}selected{% endif %}>LinkedIn</option></select></span></div>
+      <div class="card-row"><span class="label">Replied</span><span><select onchange="saveFieldDirect({{ lead.id }}, 'replied', this.value)" style="padding:4px 6px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.8rem;background:#0d1b24;color:#d8e1e6;cursor:pointer"><option value="" {% if not lead.replied %}selected{% endif %}>—</option><option value="Yes" {% if lead.replied == 'Yes' %}selected{% endif %}>✅ Yes</option><option value="No" {% if lead.replied == 'No' %}selected{% endif %}>❌ No</option></select></span></div>
+      <div class="card-row"><span class="label">Last Contacted</span><span class="editable" onclick="startEdit(this, {{ lead.id }}, 'last_contacted', '{{ lead.last_contacted | e }}', 'date')" id="last_contacted-{{ lead.id }}">{{ lead.last_contacted or '' }}</span></div>
+      <div class="card-row"><span class="label">Follow‑up</span><span class="editable {% if lead.follow_up_date and lead.follow_up_date <= today %}badge badge-nope{% endif %}" onclick="startEdit(this, {{ lead.id }}, 'follow_up_date', '{{ lead.follow_up_date | e }}', 'date')" id="follow_up_date-{{ lead.id }}">{{ lead.follow_up_date or '' }}</span></div>
+      <div class="card-row"><span class="label">Notes</span><span><textarea onblur="saveFieldDirect({{ lead.id }}, 'notes', this.value)" style="width:100%;height:48px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.78rem;resize:vertical;line-height:1.4;background:#0d1b24;color:#d8e1e6">{{ lead.notes or '' }}</textarea></span></div>
+      <div class="card-actions">
+        {% if lead.phone %}<a class="btn-wa" href="https://wa.me/91{{ lead.phone | replace(' ','') | replace('-','') | replace('+91','') | replace('(','') | replace(')','') }}" target="_blank">💬</a>{% endif %}
+        {% if lead.instagram %}<a class="btn-ig" href="https://instagram.com/{{ lead.instagram | replace('@','') }}" target="_blank">📷</a>{% endif %}
+        <button class="btn-copy" onclick="openModal({{ lead.id }}, '{{ lead.name | e }}')">✉ DM</button>
+        <button class="btn-del" onclick="deleteLead({{ lead.id }}, this)">🗑</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if not leads %}
+  <div class="empty-state"><p style="font-size:2rem;margin-bottom:12px">📭</p><p>No contacted leads yet.</p></div>
+  {% endif %}
+  {% endif %}
 
   <!-- ── QUEUE TAB ── -->
   {% if tab == 'queue' %}
@@ -1088,8 +1150,7 @@ textarea {
 const channel = new BroadcastChannel('rast_sync');
 channel.onmessage = (e) => {
   if (e.data === 'refresh') {
-    // Reload the current page content via HTMX (main area)
-    htmx.ajax('GET', window.location.pathname + window.location.search, { target: '.main', swap: 'outerHTML' });
+    window.location.reload(); // Full page refresh to avoid duplication
   }
 };
 
@@ -1098,7 +1159,7 @@ function notifyOtherTabs() {
 }
 
 // ── Undo System ──
-let undoStack = []; // client side not needed, we rely on server. But we need to show toast.
+let undoStack = [];
 let undoTimeout = null;
 
 function showUndoToast(message) {
@@ -1109,14 +1170,12 @@ function showUndoToast(message) {
   undoTimeout = setTimeout(() => toast.classList.remove('show'), 10000);
 }
 
-// Undo button
 document.getElementById('undoBtn').addEventListener('click', function() {
   fetch('/undo', { method: 'POST' })
     .then(r => r.json())
     .then(data => {
       if (data.status === 'ok') {
         document.getElementById('undoToast').classList.remove('show');
-        // Refresh the page to reflect undo
         window.location.reload();
       } else {
         alert('Nothing to undo.');
@@ -1291,7 +1350,6 @@ function deleteLead(leadId, btn) {
         card.style.transition = 'opacity 0.3s';
         setTimeout(() => card.remove(), 300);
       } else {
-        // table row
         const row = document.getElementById('row-' + leadId);
         if (row) row.remove();
       }
@@ -1325,8 +1383,6 @@ document.addEventListener('DOMContentLoaded', function() {
           if (delBtn) {
             delBtn.style.transform = 'scale(1.2)';
             setTimeout(() => delBtn.style.transform = '', 300);
-            // Optionally trigger delete after a second click? For now just visual feedback.
-            // We'll let them tap delete.
           }
         } else {
           // Swipe right -> show WhatsApp/DM
@@ -1342,11 +1398,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// ── Auto-refresh on visibility change (optional) ──────────────────────────
+// ── Auto-refresh on visibility change (full reload to avoid duplication) ──
 document.addEventListener('visibilitychange', function() {
   if (!document.hidden) {
-    // When tab becomes visible, refresh content
-    htmx.ajax('GET', window.location.pathname + window.location.search, { target: '.main', swap: 'outerHTML' });
+    window.location.reload();
   }
 });
 </script>
