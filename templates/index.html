@@ -476,6 +476,41 @@ tbody td:first-child {
   padding: 18px;
   box-shadow: var(--shadow);
   border-left: 4px solid var(--gold);
+  position: relative;
+  touch-action: pan-y;  /* allow vertical scroll, block horizontal until we override */
+  user-select: none;
+  transition: transform 0.15s ease, background 0.15s ease, opacity 0.3s ease;
+  will-change: transform;
+  overflow: hidden;
+  cursor: grab;
+}
+.queue-card.swiping {
+  cursor: grabbing;
+  transition: none;
+}
+/* Swipe hint overlays for queue cards */
+.queue-card .swipe-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.queue-card .swipe-hint.right {
+  right: 20px;
+  color: #4caf72;
+}
+.queue-card .swipe-hint.left {
+  left: 20px;
+  color: #f87171;
+}
+.queue-card .swipe-hint.show {
+  opacity: 0.9;
 }
 .queue-card h4 { font-weight: 600; margin-bottom: 4px; font-size: 0.95rem; }
 .queue-card .cat { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
@@ -521,7 +556,7 @@ a { color: inherit; }
 .htmx-indicator { display: none; }
 .htmx-request .htmx-indicator { display: inline; }
 
-/* ── Mobile Card View ── */
+/* ── Mobile Card View (static) ── */
 .leads-cards {
   display: none;
   flex-direction: column;
@@ -534,16 +569,6 @@ a { color: inherit; }
   box-shadow: var(--shadow);
   border-left: 4px solid var(--gold);
   position: relative;
-  touch-action: none;   /* prevent page scroll while swiping */
-  user-select: none;
-  transition: transform 0.15s ease, background 0.15s ease, opacity 0.3s ease;
-  will-change: transform;
-  overflow: hidden;
-  cursor: grab;
-}
-.lead-card.swiping {
-  cursor: grabbing;
-  transition: none;
 }
 .lead-card .card-row {
   display: flex;
@@ -561,30 +586,7 @@ a { color: inherit; }
   margin-top: 10px;
   flex-wrap: wrap;
 }
-/* Swipe hint labels (overlay) */
-.lead-card .swipe-hint {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: 2px;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
-}
-.lead-card .swipe-hint.right {
-  right: 20px;
-  color: #4caf72;
-}
-.lead-card .swipe-hint.left {
-  left: 20px;
-  color: #f87171;
-}
-.lead-card .swipe-hint.show {
-  opacity: 0.9;
-}
+
 /* Hide table on mobile, show cards */
 @media screen and (max-width: 768px) {
   .table-wrap { display: none; }
@@ -898,14 +900,10 @@ a { color: inherit; }
     </table>
   </div>
 
-  <!-- Mobile Cards -->
+  <!-- Mobile Cards (static, no swipe) -->
   <div class="leads-cards" id="leads-cards">
     {% for lead in leads %}
     <div class="lead-card" data-id="{{ lead.id }}" data-name="{{ lead.name }}">
-      <!-- Swipe hint overlays -->
-      <div class="swipe-hint right">✅ CONTACT</div>
-      <div class="swipe-hint left">🗑 DELETE</div>
-
       <div class="card-row">
         <span class="label">Business</span>
         <span class="value">
@@ -998,6 +996,7 @@ a { color: inherit; }
 
   <!-- ── CONTACTED TAB ── -->
   {% if tab == 'contacted' %}
+  <!-- Same as before, static cards -->
   <div class="table-wrap" id="contacted-table">
     <table>
       <thead>
@@ -1059,12 +1058,10 @@ a { color: inherit; }
       </tbody>
     </table>
   </div>
-  <!-- Mobile cards for contacted -->
+  <!-- Mobile cards static -->
   <div class="leads-cards" id="contacted-cards">
     {% for lead in leads %}
     <div class="lead-card" data-id="{{ lead.id }}">
-      <div class="swipe-hint right">✅ CONTACT</div>
-      <div class="swipe-hint left">🗑 DELETE</div>
       <div class="card-row"><span class="label">Business</span><span class="value">{% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}</span></div>
       <div class="card-row"><span class="label">Category</span><span class="value">{{ lead.category }}</span></div>
       <div class="card-row"><span class="label">Area</span><span class="value">{{ (lead.address or '').split(',')[0] }}</span></div>
@@ -1126,6 +1123,10 @@ a { color: inherit; }
   <div class="queue-grid" id="queue-grid">
     {% for lead in queue %}
     <div class="queue-card" data-id="{{ lead.id }}">
+      <!-- Swipe hint overlays (only for queue) -->
+      <div class="swipe-hint right">✅ CONTACT</div>
+      <div class="swipe-hint left">🗑 DELETE</div>
+
       <h4>
         {% if lead.website %}<a href="{{ lead.website }}" target="_blank">{{ lead.name }}</a>{% else %}{{ lead.name }}{% endif %}
       </h4>
@@ -1148,7 +1149,7 @@ a { color: inherit; }
             class="btn-del"
             onclick="deleteLead({{ lead.id }}, this)"
             title="Delete lead"
->🗑</button>
+        >🗑</button>
       </div>
     </div>
     {% endfor %}
@@ -1406,36 +1407,44 @@ function deleteLead(leadId, btn) {
     });
 }
 
-// ── Tinder‑style Swipe for mobile cards ──────────────────────────────────
+// ── Tinder‑style Swipe ONLY for Queue cards ──────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-  const cards = document.querySelectorAll('.lead-card');
-  let startX = 0;
+  const cards = document.querySelectorAll('.queue-card');
+  let startX = 0, startY = 0;
   let currentCard = null;
   let isSwiping = false;
-  const SWIPE_THRESHOLD = 100;
+  const SWIPE_THRESHOLD = 80;
 
   cards.forEach(card => {
-    // Touch events
     card.addEventListener('touchstart', function(e) {
-      // Ignore if swiping already or if the touch started on a button/input
       if (isSwiping) return;
       const target = e.target;
       if (target.closest('button, a, input, select, textarea, .editable')) return;
-      startX = e.touches[0].clientX;
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
       currentCard = this;
       isSwiping = true;
       this.classList.add('swiping');
       this.style.transition = 'none';
-      // Reset hints
       this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
     }, { passive: true });
 
     card.addEventListener('touchmove', function(e) {
       if (!isSwiping || !currentCard) return;
-      const deltaX = e.touches[0].clientX - startX;
-      // Move the card
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+      // If vertical movement exceeds horizontal, cancel swipe (allow scroll)
+      if (Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+        // let scroll happen, reset card
+        this.style.transform = '';
+        this.style.backgroundColor = '';
+        this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+        return;
+      }
+      e.preventDefault(); // prevent scroll only when swiping horizontally
       this.style.transform = `translateX(${deltaX}px)`;
-      // Change background color and show hint
       const rightHint = this.querySelector('.swipe-hint.right');
       const leftHint = this.querySelector('.swipe-hint.left');
       if (deltaX > 20) {
@@ -1451,24 +1460,18 @@ document.addEventListener('DOMContentLoaded', function() {
         rightHint.classList.remove('show');
         leftHint.classList.remove('show');
       }
-    }, { passive: true });
+    }, { passive: false });
 
     card.addEventListener('touchend', function(e) {
       if (!isSwiping || !currentCard) return;
-      const deltaX = currentCard._deltaX || 0;
       const finalDelta = e.changedTouches[0].clientX - startX;
-      
-      // Decide action
       if (finalDelta > SWIPE_THRESHOLD) {
-        // Right swipe → Mark Contacted
         const leadId = parseInt(this.dataset.id);
-        markContacted(leadId, this);
+        markContactedSwipe(leadId, this);
       } else if (finalDelta < -SWIPE_THRESHOLD) {
-        // Left swipe → Delete
         const leadId = parseInt(this.dataset.id);
         deleteLeadSwipe(leadId, this);
       } else {
-        // Snap back
         this.style.transition = 'transform 0.3s ease, background 0.3s ease';
         this.style.transform = 'translateX(0)';
         this.style.backgroundColor = '';
@@ -1482,12 +1485,13 @@ document.addEventListener('DOMContentLoaded', function() {
       currentCard = null;
     }, { passive: true });
 
-    // Also handle mouse for desktop testing (optional)
+    // Mouse events for desktop testing
     card.addEventListener('mousedown', function(e) {
       if (isSwiping) return;
       const target = e.target;
       if (target.closest('button, a, input, select, textarea, .editable')) return;
       startX = e.clientX;
+      startY = e.clientY;
       currentCard = this;
       isSwiping = true;
       this.classList.add('swiping');
@@ -1498,6 +1502,13 @@ document.addEventListener('DOMContentLoaded', function() {
     card.addEventListener('mousemove', function(e) {
       if (!isSwiping || !currentCard) return;
       const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      if (Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+        this.style.transform = '';
+        this.style.backgroundColor = '';
+        this.querySelectorAll('.swipe-hint').forEach(h => h.classList.remove('show'));
+        return;
+      }
       this.style.transform = `translateX(${deltaX}px)`;
       const rightHint = this.querySelector('.swipe-hint.right');
       const leftHint = this.querySelector('.swipe-hint.left');
@@ -1521,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const finalDelta = e.clientX - startX;
       if (finalDelta > SWIPE_THRESHOLD) {
         const leadId = parseInt(this.dataset.id);
-        markContacted(leadId, this);
+        markContactedSwipe(leadId, this);
       } else if (finalDelta < -SWIPE_THRESHOLD) {
         const leadId = parseInt(this.dataset.id);
         deleteLeadSwipe(leadId, this);
@@ -1539,20 +1550,15 @@ document.addEventListener('DOMContentLoaded', function() {
       currentCard = null;
     });
 
-    // Prevent context menu on long press
-    card.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-    });
+    card.addEventListener('contextmenu', (e) => e.preventDefault());
   });
 
-  function markContacted(leadId, card) {
-    // Update status via API
+  function markContactedSwipe(leadId, card) {
     const formData = new FormData();
     formData.append('field', 'status');
     formData.append('value', 'Contacted');
     fetch(`/lead/${leadId}/update`, { method: 'POST', body: formData })
       .then(() => {
-        // Animate card away
         card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
         card.style.transform = 'translateX(400px)';
         card.style.opacity = '0';
@@ -1564,7 +1570,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 400);
       })
       .catch(() => {
-        // on error, snap back
         card.style.transition = 'transform 0.3s ease, background 0.3s ease';
         card.style.transform = 'translateX(0)';
         card.style.backgroundColor = '';
@@ -1578,7 +1583,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function deleteLeadSwipe(leadId, card) {
     if (!confirm('Delete this lead?')) {
-      // snap back
       card.style.transition = 'transform 0.3s ease, background 0.3s ease';
       card.style.transform = 'translateX(0)';
       card.style.backgroundColor = '';
