@@ -5,12 +5,14 @@ Open:     http://localhost:5000
 """
 
 import os
+import hashlib
 from datetime import date
 from flask import Flask, render_template, request, jsonify, session, Response
 from dotenv import load_dotenv
 from database import (
     init_db, fetch_all_leads, fetch_lead, fetch_daily_queue,
-    fetch_due_followups, update_field, delete_lead, get_stats, insert_lead
+    fetch_due_followups, update_field, delete_lead, get_stats,
+    upsert_lead
 )
 from outreach import fill_template, get_template_names, generate_dm
 
@@ -28,6 +30,12 @@ CATEGORIES = ["Interior Designer", "Real Estate Agent", "Builder", "Architect"]
 def get_old_value(lead_id: int, field: str):
     lead = fetch_lead(lead_id)
     return lead.get(field, '')
+
+# ── Helper for stable place_id ──
+def generate_place_id(name: str, address: str = "") -> str:
+    """Create a stable unique ID from name and address."""
+    raw = f"{name}|{address}".strip().lower()
+    return hashlib.md5(raw.encode()).hexdigest()[:16]
 
 # ── Routes ──
 @app.route("/")
@@ -131,7 +139,7 @@ def ai_message(lead_id):
     msg = generate_dm(lead)
     return jsonify({"message": msg})
 
-# ── Export CSV ──
+# ── Export CSV (includes place_id now) ──
 @app.route("/export")
 def export_csv():
     import csv, io
@@ -149,7 +157,7 @@ def export_csv():
         headers={"Content-Disposition": "attachment; filename=rast_leads.csv"}
     )
 
-# ── Import CSV (NOW RETURNS JSON) ──
+# ── Import CSV (uses upsert and stable IDs) ──
 @app.route("/import-csv", methods=["POST"])
 def import_csv():
     import csv, io
@@ -161,24 +169,31 @@ def import_csv():
         reader = csv.DictReader(io.StringIO(file.stream.read().decode("utf-8")))
         count = 0
         for row in reader:
-            insert_lead({
-                "place_id": row.get('place_id', f'import_{row.get("name", count)}'),
-                "name": row['name'],
-                "category": row.get('category', ''),
-                "address": row.get('address', ''),
-                "phone": row.get('phone', ''),
-                "website": row.get('website', ''),
+            name = row.get('name', 'Unknown').strip()
+            address = row.get('address', '').strip()
+            # Use place_id if present in CSV, else generate stable one
+            place_id = row.get('place_id', '').strip()
+            if not place_id:
+                place_id = generate_place_id(name, address)
+
+            upsert_lead({
+                "place_id": place_id,
+                "name": name,
+                "category": row.get('category', '').strip(),
+                "address": address,
+                "phone": row.get('phone', '').strip(),
+                "website": row.get('website', '').strip(),
                 "rating": float(row['rating']) if row.get('rating') else None,
-                "instagram": row.get('instagram', ''),
-                "status": row.get('status', 'Not Contacted'),
-                "notes": row.get('notes', ''),
-                "last_contacted": row.get('last_contacted', ''),
-                "follow_up_date": row.get('follow_up_date', ''),
-                "channel": row.get('channel', ''),
-                "replied": row.get('replied', ''),
+                "instagram": row.get('instagram', '').strip(),
+                "status": row.get('status', 'Not Contacted').strip(),
+                "notes": row.get('notes', '').strip(),
+                "last_contacted": row.get('last_contacted', '').strip(),
+                "follow_up_date": row.get('follow_up_date', '').strip(),
+                "channel": row.get('channel', '').strip(),
+                "replied": row.get('replied', '').strip(),
             })
             count += 1
-        return jsonify({"success": True, "message": f"✅ Imported {count} leads!", "count": count})
+        return jsonify({"success": True, "message": f"✅ Imported/updated {count} leads!", "count": count})
     except Exception as e:
         return jsonify({"success": False, "message": f"❌ Import failed: {str(e)}"}), 500
 
