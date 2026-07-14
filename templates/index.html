@@ -683,12 +683,9 @@ a { color: inherit; }
   </div>
   <div class="header-right">
     <a href="/export" class="btn-export">⬇ Export CSV</a>
-    <!-- Import CSV button -->
-    <form action="/import-csv" method="post" enctype="multipart/form-data" style="display:inline;">
-      <input type="file" name="file" accept=".csv" id="import-file-input">
-      <button type="button" class="btn-import" onclick="document.getElementById('import-file-input').click();">📥 Import CSV</button>
-      <button type="submit" style="display:none;" id="import-submit">Submit</button>
-    </form>
+    <!-- Import CSV button with AJAX -->
+    <button class="btn-import" id="importBtn">📥 Import CSV</button>
+    <input type="file" id="import-file-input" accept=".csv">
   </div>
 </header>
 
@@ -1645,17 +1642,50 @@ document.addEventListener('visibilitychange', function() {
   if (!document.hidden) window.location.reload();
 });
 
-// ── Import CSV: trigger file input and auto-submit ──
+// ── Import CSV with AJAX ──
 document.addEventListener('DOMContentLoaded', function() {
+  const importBtn = document.getElementById('importBtn');
   const fileInput = document.getElementById('import-file-input');
-  const submitBtn = document.getElementById('import-submit');
-  if (fileInput && submitBtn) {
-    fileInput.addEventListener('change', function() {
-      if (this.files.length > 0) {
-        submitBtn.click();
+
+  importBtn.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (this.files.length === 0) return;
+    const file = this.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Disable button, show loading
+    importBtn.textContent = '⏳ Importing…';
+    importBtn.disabled = true;
+
+    fetch('/import-csv', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      importBtn.textContent = '📥 Import CSV';
+      importBtn.disabled = false;
+      if (data.success) {
+        showToast(data.message);
+        // Reload page after 1.5s to show new leads
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        showToast('❌ ' + data.message);
       }
+    })
+    .catch(error => {
+      importBtn.textContent = '📥 Import CSV';
+      importBtn.disabled = false;
+      showToast('❌ Network error – try again.');
     });
-  }
+
+    // Reset file input so same file can be re-uploaded
+    this.value = '';
+  });
 });
 </script>
 </body>
