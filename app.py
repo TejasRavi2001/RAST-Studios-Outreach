@@ -149,35 +149,38 @@ def export_csv():
         headers={"Content-Disposition": "attachment; filename=rast_leads.csv"}
     )
 
-# ── Import CSV (NEW) ──
+# ── Import CSV (NOW RETURNS JSON) ──
 @app.route("/import-csv", methods=["POST"])
 def import_csv():
     import csv, io
     file = request.files.get("file")
     if not file:
-        return "No file uploaded", 400
+        return jsonify({"success": False, "message": "No file uploaded"}), 400
 
-    reader = csv.DictReader(io.StringIO(file.stream.read().decode("utf-8")))
-    count = 0
-    for row in reader:
-        insert_lead({
-            "place_id": row.get('place_id', f'import_{row.get("name", count)}'),
-            "name": row['name'],
-            "category": row.get('category', ''),
-            "address": row.get('address', ''),
-            "phone": row.get('phone', ''),
-            "website": row.get('website', ''),
-            "rating": float(row['rating']) if row.get('rating') else None,
-            "instagram": row.get('instagram', ''),
-            "status": row.get('status', 'Not Contacted'),
-            "notes": row.get('notes', ''),
-            "last_contacted": row.get('last_contacted', ''),
-            "follow_up_date": row.get('follow_up_date', ''),
-            "channel": row.get('channel', ''),
-            "replied": row.get('replied', ''),
-        })
-        count += 1
-    return f"✅ Imported {count} leads!", 200
+    try:
+        reader = csv.DictReader(io.StringIO(file.stream.read().decode("utf-8")))
+        count = 0
+        for row in reader:
+            insert_lead({
+                "place_id": row.get('place_id', f'import_{row.get("name", count)}'),
+                "name": row['name'],
+                "category": row.get('category', ''),
+                "address": row.get('address', ''),
+                "phone": row.get('phone', ''),
+                "website": row.get('website', ''),
+                "rating": float(row['rating']) if row.get('rating') else None,
+                "instagram": row.get('instagram', ''),
+                "status": row.get('status', 'Not Contacted'),
+                "notes": row.get('notes', ''),
+                "last_contacted": row.get('last_contacted', ''),
+                "follow_up_date": row.get('follow_up_date', ''),
+                "channel": row.get('channel', ''),
+                "replied": row.get('replied', ''),
+            })
+            count += 1
+        return jsonify({"success": True, "message": f"✅ Imported {count} leads!", "count": count})
+    except Exception as e:
+        return jsonify({"success": False, "message": f"❌ Import failed: {str(e)}"}), 500
 
 # ── Helper ──
 def _cell_html(lead: dict, field: str) -> str:
