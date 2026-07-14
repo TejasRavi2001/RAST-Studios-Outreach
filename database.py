@@ -1,27 +1,11 @@
 """
-database.py — SQLite with automatic Railway Volume detection
+database.py – Simple SQLite, no volumes, no fuss.
 """
 
-import os
 import sqlite3
 from contextlib import contextmanager
 
-# ── Smart database path ──
-def get_db_path():
-    # If we're on Railway with a volume mounted at /app/data
-    if os.path.exists("/app/data"):
-        db_dir = "/app/data"
-    else:
-        # Local development – use the current directory
-        db_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Ensure the directory exists (creates it if missing)
-    if not os.path.exists(db_dir):
-        os.makedirs(db_dir)
-    
-    return os.path.join(db_dir, "leads.db")
-
-DB_PATH = get_db_path()
+DB_PATH = "leads.db"
 
 @contextmanager
 def get_conn():
@@ -58,19 +42,11 @@ def init_db():
                 created_at      TEXT    DEFAULT (datetime('now'))
             )
         """)
-
-        # Safe migration for existing databases
+        # Safe migration for missing columns
         existing = {r["name"] for r in conn.execute("PRAGMA table_info(leads)").fetchall()}
-        migrations = {
-            "last_contacted": "TEXT DEFAULT ''",
-            "follow_up_date": "TEXT DEFAULT ''",
-            "channel":        "TEXT DEFAULT ''",
-            "replied":        "TEXT DEFAULT ''",
-            "instagram":      "TEXT DEFAULT ''",
-        }
-        for col, typedef in migrations.items():
+        for col in ["last_contacted", "follow_up_date", "channel", "replied", "instagram"]:
             if col not in existing:
-                conn.execute(f"ALTER TABLE leads ADD COLUMN {col} {typedef}")
+                conn.execute(f"ALTER TABLE leads ADD COLUMN {col} TEXT DEFAULT ''")
 
 def insert_lead(lead: dict):
     with get_conn() as conn:
