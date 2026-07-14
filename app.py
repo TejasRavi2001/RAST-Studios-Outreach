@@ -1,5 +1,5 @@
 """
-app.py — RAST Studios Lead Dashboard (Flask + HTMX)
+app.py – RAST Studios Lead Dashboard (Flask + HTMX)
 Run with: python app.py
 Open:     http://localhost:5000
 """
@@ -10,13 +10,13 @@ from flask import Flask, render_template, request, jsonify, session, Response
 from dotenv import load_dotenv
 from database import (
     init_db, fetch_all_leads, fetch_lead, fetch_daily_queue,
-    fetch_due_followups, update_field, delete_lead, get_stats
+    fetch_due_followups, update_field, delete_lead, get_stats, insert_lead
 )
 from outreach import fill_template, get_template_names, generate_dm
 
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key')
 init_db()
 
 STATUSES  = ["Not Contacted", "Contacted", "Converted", "Not Interested"]
@@ -24,7 +24,7 @@ CHANNELS  = ["", "Instagram", "WhatsApp", "Email", "LinkedIn"]
 REPLIED   = ["", "Yes", "No", "Pending"]
 CATEGORIES = ["Interior Designer", "Real Estate Agent", "Builder", "Architect"]
 
-# ── Helper to get old field value ──
+# ── Helper for undo ──
 def get_old_value(lead_id: int, field: str):
     lead = fetch_lead(lead_id)
     return lead.get(field, '')
@@ -40,14 +40,12 @@ def index():
     all_leads = fetch_all_leads()
     filtered = all_leads
 
-    # Tab filtering
     if tab == 'contacted':
         filtered = [l for l in filtered if l['status'] == 'Contacted']
-        status = ''  # ignore status filter for contacted tab
+        status = ''
     elif tab == 'leads' and status:
         filtered = [l for l in filtered if l['status'] == status]
 
-    # Search & category filters
     if q:
         filtered = [l for l in filtered if
             q in l["name"].lower() or
@@ -79,7 +77,7 @@ def index():
         today=date.today().isoformat(),
     )
 
-# ── Inline field update (with undo) ──
+# ── Update (with undo) ──
 @app.route("/lead/<int:lead_id>/update", methods=["POST"])
 def update_lead(lead_id):
     field = request.form.get("field")
@@ -87,8 +85,6 @@ def update_lead(lead_id):
     try:
         old_value = get_old_value(lead_id, field)
         update_field(lead_id, field, value)
-
-        # Store undo action
         if 'undo_stack' not in session:
             session['undo_stack'] = []
         session['undo_stack'].append({
@@ -100,13 +96,10 @@ def update_lead(lead_id):
         if len(session['undo_stack']) > 50:
             session['undo_stack'] = session['undo_stack'][-50:]
         session.modified = True
-
-        lead = fetch_lead(lead_id)
-        return _cell_html(lead, field)
+        return _cell_html(fetch_lead(lead_id), field)
     except Exception as e:
         return f'<span style="color:red">Error: {e}</span>', 400
 
-# ── Undo route ──
 @app.route("/undo", methods=["POST"])
 def undo():
     stack = session.get('undo_stack', [])
@@ -124,7 +117,7 @@ def remove_lead(lead_id):
     delete_lead(lead_id)
     return ""
 
-# ── Template message API ──
+# ── Templates ──
 @app.route("/lead/<int:lead_id>/message")
 def get_message(lead_id):
     template_name = request.args.get("template", "Instagram DM")
@@ -132,7 +125,6 @@ def get_message(lead_id):
     msg = fill_template(template_name, lead)
     return jsonify({"message": msg, "name": lead.get("name", "")})
 
-# ── AI DM API ──
 @app.route("/lead/<int:lead_id>/ai-message")
 def ai_message(lead_id):
     lead = fetch_lead(lead_id)
@@ -145,7 +137,7 @@ def export_csv():
     import csv, io
     leads = fetch_all_leads()
     output = io.StringIO()
-    fields = ["name","category","address","phone","website","rating",
+    fields = ["place_id","name","category","address","phone","website","rating",
               "status","channel","replied","last_contacted","follow_up_date",
               "instagram","notes"]
     writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
@@ -157,7 +149,37 @@ def export_csv():
         headers={"Content-Disposition": "attachment; filename=rast_leads.csv"}
     )
 
-# ── Cell HTML helper ──
+# ── Import CSV (NEW) ──
+@app.route("/import-csv", methods=["POST"])
+def import_csv():
+    import csv, io
+    file = request.files.get("file")
+    if not file:
+        return "No file uploaded", 400
+
+    reader = csv.DictReader(io.StringIO(file.stream.read().decode("utf-8")))
+    count = 0
+    for row in reader:
+        insert_lead({
+            "place_id": row.get('place_id', f'import_{row.get("name", count)}'),
+            "name": row['name'],
+            "category": row.get('category', ''),
+            "address": row.get('address', ''),
+            "phone": row.get('phone', ''),
+            "website": row.get('website', ''),
+            "rating": float(row['rating']) if row.get('rating') else None,
+            "instagram": row.get('instagram', ''),
+            "status": row.get('status', 'Not Contacted'),
+            "notes": row.get('notes', ''),
+            "last_contacted": row.get('last_contacted', ''),
+            "follow_up_date": row.get('follow_up_date', ''),
+            "channel": row.get('channel', ''),
+            "replied": row.get('replied', ''),
+        })
+        count += 1
+    return f"✅ Imported {count} leads!", 200
+
+# ── Helper ──
 def _cell_html(lead: dict, field: str) -> str:
     from flask import render_template_string
     return render_template_string(
@@ -167,7 +189,7 @@ def _cell_html(lead: dict, field: str) -> str:
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
 
-# ── Jinja global: today's date ──
+# ── Jinja global ──
 from datetime import date as _date
 @app.template_global()
 def today():
