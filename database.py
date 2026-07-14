@@ -1,5 +1,5 @@
 """
-database.py – Simple SQLite, no volumes, no fuss.
+database.py – Simple SQLite with upsert support.
 """
 
 import sqlite3
@@ -42,19 +42,34 @@ def init_db():
                 created_at      TEXT    DEFAULT (datetime('now'))
             )
         """)
-        # Safe migration for missing columns
         existing = {r["name"] for r in conn.execute("PRAGMA table_info(leads)").fetchall()}
         for col in ["last_contacted", "follow_up_date", "channel", "replied", "instagram"]:
             if col not in existing:
                 conn.execute(f"ALTER TABLE leads ADD COLUMN {col} TEXT DEFAULT ''")
 
 def insert_lead(lead: dict):
+    """Simple insert – ignores duplicates."""
     with get_conn() as conn:
         conn.execute("""
             INSERT OR IGNORE INTO leads
                 (place_id, name, category, address, phone, website, rating)
             VALUES
                 (:place_id, :name, :category, :address, :phone, :website, :rating)
+        """, lead)
+
+def upsert_lead(lead: dict):
+    """
+    Insert or replace – updates existing lead if place_id matches.
+    Expects all fields that exist in the table.
+    """
+    with get_conn() as conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO leads
+                (place_id, name, category, address, phone, website, rating,
+                 status, notes, last_contacted, follow_up_date, channel, replied, instagram)
+            VALUES
+                (:place_id, :name, :category, :address, :phone, :website, :rating,
+                 :status, :notes, :last_contacted, :follow_up_date, :channel, :replied, :instagram)
         """, lead)
 
 def lead_exists(place_id: str) -> bool:
