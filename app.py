@@ -1,4 +1,5 @@
 """
+you are beautiful
 app.py – RAST Studios Lead Dashboard (Flask + HTMX)
 Run with: python app.py
 Open:     http://localhost:5000
